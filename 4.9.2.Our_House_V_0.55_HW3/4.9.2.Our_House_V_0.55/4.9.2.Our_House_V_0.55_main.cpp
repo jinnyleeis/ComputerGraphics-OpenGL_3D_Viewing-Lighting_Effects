@@ -149,7 +149,7 @@ void display(void) {
 		scene.ViewMatrix = camera->get().ViewMatrix;
 		scene.ProjectionMatrix = camera->get().ProjectionMatrix;
 		scene.draw_cam_frame(camera->get());
-
+	
 		if (scene.show_axes)
 		scene.axis_object.draw_axis(
 			static_cast<Shader_Simple*>(
@@ -214,8 +214,8 @@ void keyboard(unsigned char key, int x, int y) {
 			/* --- 카메라 축 토글 (Axis 표시) -------------------------------------- */
 
 			// keyboard() ─ case 't' 수정
-	case 't':
-		scene.show_axes = !scene.show_axes;
+	case '1':
+		scene.show_camframe = !scene.show_camframe;
 		glutPostRedisplay();
 		break;
 

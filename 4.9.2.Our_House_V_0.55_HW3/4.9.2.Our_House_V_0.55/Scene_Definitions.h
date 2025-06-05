@@ -85,6 +85,10 @@ struct Axis_Object {
 
 	void define_axis();
 	void draw_axis(Shader_Simple* shader_simple, glm::mat4& ViewMatrix, glm::mat4& ProjectionMatrix);
+	void draw_axis_with_model(Shader_Simple* shader_simple,
+		glm::mat4& ViewMatrix,
+		glm::mat4& ProjectionMatrix,
+		const glm::mat4& ModelMatrix);
 };
 
 struct Static_Object { // an object that does not move
