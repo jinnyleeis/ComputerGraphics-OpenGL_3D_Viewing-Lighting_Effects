@@ -151,10 +151,10 @@ void display(void) {
 		scene.draw_cam_frame(camera->get());
 
 		if (scene.show_axes)
-			scene.axis_object.draw_axis(
-				static_cast<Shader_Simple*>(
+		scene.axis_object.draw_axis(
+			static_cast<Shader_Simple*>(
 					&scene.shader_list[shader_ID_mapper[SHADER_SIMPLE]]
-					.get()), scene.ViewMatrix, scene.ProjectionMatrix);
+				  .get()), scene.ViewMatrix, scene.ProjectionMatrix);
 		scene.draw_world();
 	}
 	glutSwapBuffers();
@@ -167,16 +167,7 @@ void keyboard(unsigned char key, int x, int y) {
 
 	switch (key) {
 	case 27: glutLeaveMainLoop(); break;                  // ESC
-		/* --- 카메라 이동 (MAIN 전용) ----------------------------------------- */
-	/* --- 늑대 이동 ----------------------------------------------------- */
-//	case 'w': move_wolf(0, WOLF_STEP); break;   // 북(+y)
-//	case 's': move_wolf(0, -WOLF_STEP); break;   // 남(-y)
-//	case 'a': move_wolf(-WOLF_STEP, 0); break;    // 서(-x)
-//	case 'd': move_wolf(WOLF_STEP, 0); break;    // 동(+x)
-		//case GLUT_KEY_LEFT: rotate_camera(cam, cam.cam_view.vaxis, ROT_STEP); break;
-		//case GLUT_KEY_RIGHT: rotate_camera(cam, cam.cam_view.vaxis, -ROT_STEP); break;
-		//case GLUT_KEY_UP: rotate_camera(cam, cam.cam_view.uaxis, ROT_STEP); break;
-		//case GLUT_KEY_DOWN: rotate_camera(cam, cam.cam_view.uaxis, -ROT_STEP); break;
+
 /* ────────── n-축(roll) 회전 : Q / E ────────── */
 	case 'q': if (cam.flag_move) rotate_camera(cam, cam.cam_view.naxis, ROT_STEP);  break;
 	case 'e': if (cam.flag_move) rotate_camera(cam, cam.cam_view.naxis, -ROT_STEP);  break;
