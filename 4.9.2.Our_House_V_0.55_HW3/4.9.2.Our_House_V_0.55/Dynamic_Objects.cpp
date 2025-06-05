@@ -63,14 +63,38 @@ sizeof(TIGER_PATH) / sizeof(PathSeg);
 
 static const float ROOF_Z = 55.f;   // 지붕 바로 위
 
+// 1. 기존 TIGER_PATH(늑대 경로)와 완전히 겹치지 않는, 
+//    1층 복도 안쪽을 따라 순회하는 SPIDER_PATH 예시
 static const PathSeg SPIDER_PATH[] = {
-	// 중앙 홀 기둥 주변(실내)
-	  {{115,  80, 20}, {115,  80, ROOF_Z}, 1200},  // 수직 상승
-	  {{115,  80, ROOF_Z}, {200,  80, ROOF_Z}, 1200}, // 지붕 위 동쪽 이동
-	  {{200,  80, ROOF_Z}, {200, 140, ROOF_Z},  800}, // 북쪽
-	  {{200, 140, ROOF_Z}, { 40, 140, ROOF_Z}, 1600}, // 서쪽 끝까지
-	  {{ 40, 140, ROOF_Z}, { 40,  60, ROOF_Z}, 1600}, // 남쪽
-	  {{ 40,  60, ROOF_Z}, {115,  80, 20   }, 2000}  // 대각선 하강하여 출발점 복귀
+	// ───────────────────────────────────────────────────────────────
+	// 아래 구간들은 모두 z=20 (스파이더 바닥 높이) 고정
+	// 각 좌표는 복도 안쪽을 반환(벽에 충돌하지 않도록)하며, 
+	// 사각형 형태로 한 바퀴 순회합니다.
+	// ───────────────────────────────────────────────────────────────
+
+	// ① 남서쪽(출발점) (40,  25, 20) → (85,  25, 20)
+	//    → 서쪽 복도 바닥을 따라 동쪽으로 이동
+	{{ 40,  70, 20}, { 85, 70, 20},   800},
+
+	// ② (85,  25, 20) → (85,  55, 20)
+	//    → 남북 복도를 따라 북쪽으로 이동
+	{{ 85,  70, 20}, { 85,  45, 20},  1000},
+
+	// ③ (85,  55, 20) → (155, 55, 20)
+	//    → 복도 안쪽(중간) 가로 복도를 따라 동쪽으로 이동
+	{{ 85,  50, 20}, {90, 50, 20},   900},
+
+	// ④ (155, 55, 20) → (155, 95, 20)
+	//    → 동쪽 복도를 따라 북쪽으로 이동
+	{{90,  55, 20}, {90,  80, 20},   800},
+
+	// ⑤ (155, 95, 20) → ( 40, 95, 20)
+	//    → 북쪽 복도 전체를 따라 서쪽으로 이동 (가장 긴 구간)
+	{{90,  80, 20}, { 40,   80, 20},  1200},
+
+	// ⑥ (40,  95, 20) → ( 40, 25, 20)
+	//    → 서쪽 복도를 따라 남쪽으로 내려와 출발점 복귀
+	{{ 40,  80, 20}, { 40,  70, 20},  1000}
 };
 static const int N_SPIDER_SEG = sizeof(SPIDER_PATH) / sizeof(PathSeg);
 
@@ -183,13 +207,13 @@ void Spider_D::define_object() {
 		/* 3. �ν��Ͻ�(1��) - ��ȯ & ���� */
 		object_frames[i].instances.emplace_back();
 		cur_MM = &(object_frames[i].instances.back().ModelMatrix);
-		*cur_MM = glm::scale(glm::mat4(1.0f), glm::vec3(24.40f));
+		*cur_MM = glm::scale(glm::mat4(1.0f), glm::vec3(7.40f));
 
 
 		cur_material = &(object_frames[i].instances.back().material);
-		cur_material->emission = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-		cur_material->ambient = glm::vec4(0.02f, 0.08f, 0.02f, 1.0f); // ��ο� ���
-		cur_material->diffuse = glm::vec4(0.05f, 0.25f, 0.05f, 1.0f);
+		cur_material->emission = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		cur_material->ambient = glm::vec4(0.12f, 0.08f, 0.02f, 1.0f); // ��ο� ���
+		cur_material->diffuse = glm::vec4(0.15f, 0.25f, 0.05f, 1.0f);
 		cur_material->specular = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
 		cur_material->exponent = 128.0f * 0.3f;
 	}
@@ -277,14 +301,28 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix, glm::mat4& ProjectionMat
 		ModelMatrix = glm::rotate(ModelMatrix, rotation_angle, glm::vec3(1.0f, 0.0f, 0.0f));
 		break;
 	case DYNAMIC_OBJECT_SPIDER: {
+		// 1) 경로 상 위치와 진행 방향(dir) 계산
 		glm::vec3 dir;
 		glm::vec3 pos = path_pos_dir(t_ms, SPIDER_PATH, N_SPIDER_SEG, &dir);
+		// dir = normalize(seg.to - seg.from)
 
-		const float heading = atan2f(dir.y, dir.x);          // XY-평면 진행 방향
-		ModelMatrix = glm::translate(glm::mat4(1.f), pos);
-		ModelMatrix = glm::rotate(ModelMatrix,
-			heading + glm::half_pi<float>(),
-			glm::vec3(0, 0, 1));
+		// 2) heading: XY 평면 상의 진행 각도 (Z 축 기준 회전)
+		float heading = atan2f(dir.y, dir.x); // -pi .. +pi 사이 값
+
+		// 3) “바퀴 굴러가는” 회전 각도 계산
+		//    여기서는 t_ms 에 비례하는 상수 속도를 주되, 부드럽게 보이도록 적당한 계수를 곱합니다.
+		//    예: 𝜃 = (t_ms * 0.005) 라디안 (속도 계수는 필요에 따라 조절)
+		float speed_factor = 0.005f; // ← 이 값을 바꾸면 굴러가는 속도 조절 가능
+		float wheelRotation = t_ms * speed_factor; // time-based roll angle
+
+		// 4) Translate -> Rotate_Z(heading) -> Rotate_X(wheelRotation) 순으로 ModelMatrix 구성
+		//    - 로컬 X축(1,0,0)을 기준으로 “굴러가는” 회전을 추가한다.
+		glm::mat4 T = glm::translate(glm::mat4(1.0f), pos);
+		glm::mat4 R_heading = glm::rotate(glm::mat4(1.0f), heading + glm::half_pi<float>(), glm::vec3(0, 0, 1));
+		glm::mat4 R_roll = glm::rotate(glm::mat4(1.0f), wheelRotation, glm::vec3(1, 0, 0));
+
+		// 최종 ModelMatrix: (위치 이동) * (방향 향하게) * (굴러가는 회전)
+		ModelMatrix = T * R_heading * R_roll;
 		break;
 	}
 
