@@ -14,6 +14,8 @@ const float WOLF_STEP = 5.f;   // 한 번 누를 때 이동 거리
 // 현재 조작 대상 카메라 – 기본은 MAIN, '8' 을 누르면 CCTV_D 로 전환
 static Camera_ID   g_active_cam_id = CAMERA_MAIN;
 #define CAM_AXIS_LENGTH 1.0f
+static Camera_ID g_cur_cam_id = CAMERA_MAIN;
+static Camera_ID g_prev_cam_id = CAMERA_MAIN;   // 최초엔 동일
 
 inline void update_axis_mm(Camera& cam)
 {
@@ -88,9 +90,10 @@ void make_viewport_center(Camera& cam, int W, int H) {
 }
 
 inline Camera& ACTIVE_CAM() {
-	return scene.camera_list[camera_ID_mapper[g_active_cam_id]];
+	return scene.camera_list[camera_ID_mapper[g_cur_cam_id]];
 }
-
+inline Camera& CUR_CAM() { return scene.camera_list[camera_ID_mapper[g_cur_cam_id]]; }
+inline Camera& PREV_CAM() { return scene.camera_list[camera_ID_mapper[g_prev_cam_id]]; }
 const float MOVE_STEP = 10.0f;                // world units
 const float ROT_STEP = 5.0f * TO_RADIAN;     // 5° → rad
 const float ZOOM_STEP = 2.0f * TO_RADIAN;     // 2°
@@ -193,9 +196,9 @@ void display(void) {
 		case 'a': move_wolf(0, WOLF_STEP); break;   // 북(+y)
 		case 'd':move_wolf(0, -WOLF_STEP); break;   // 남(-y)
 
-		case 'r': if (g_active_cam_id == CAMERA_MAIN)
+		case 'r': if (g_cur_cam_id == CAMERA_MAIN)
 			translate_camera(cam, cam.cam_view.vaxis, MOVE_STEP); break;
-		case 'f': if (g_active_cam_id == CAMERA_MAIN)
+		case 'f': if (g_cur_cam_id == CAMERA_MAIN)
 			translate_camera(cam, -cam.cam_view.vaxis, MOVE_STEP); break;
 			/* --- 줌 (MAIN + CCTV_D) --------------------------------------------- */
 		case 'z':
@@ -211,13 +214,13 @@ void display(void) {
 				rebuild_perspective(cam);
 			} break;
 			/* --- CCTV_D FOV 세밀 조정 ------------------------------------------- */
-		case 'v': if (g_active_cam_id == CAMERA_CCTV_D_REMOTE) {
+		case 'v': if (g_cur_cam_id == CAMERA_CCTV_D_REMOTE) {
 			cam.cam_proj.params.pers.fovy =
 				glm::clamp(cam.cam_proj.params.pers.fovy - ZOOM_STEP,
 					5.f * TO_RADIAN, 80.f * TO_RADIAN);
 			rebuild_perspective(cam);
 		} break;
-		case 'b': if (g_active_cam_id == CAMERA_CCTV_D_REMOTE) {
+		case 'b': if (g_cur_cam_id == CAMERA_CCTV_D_REMOTE) {
 			cam.cam_proj.params.pers.fovy =
 				glm::clamp(cam.cam_proj.params.pers.fovy + ZOOM_STEP,
 					5.f * TO_RADIAN, 80.f * TO_RADIAN);
@@ -278,18 +281,19 @@ void display(void) {
 				fprintf(stdout, "^^^ Depth test disabled.\n");
 			}
 			break;
-		case '0':    // MAIN <-> CCTV-D 토글
-			g_active_cam_id = (g_active_cam_id == CAMERA_MAIN ?
-				CAMERA_CCTV_D_REMOTE : CAMERA_MAIN);
+		case '0':          // MAIN <-> CCTV-D 토글
+			g_prev_cam_id = g_cur_cam_id;                                // 기록
+			g_cur_cam_id = (g_cur_cam_id == CAMERA_MAIN ?
+				CAMERA_CCTV_D_REMOTE : CAMERA_MAIN);        // 전환
 			break;
 		default: break;
 		}
 	
-Camera& new_main = ACTIVE_CAM();
-Camera& old_main = scene.camera_data.cam_main;
+//Camera& new_main = ACTIVE_CAM();
+//Camera& old_main = scene.camera_data.cam_main;
 
 	//std::swap(new_main.view_port, old_main.view_port);
-std::swap(new_main.camera_id, old_main.camera_id);
+//std::swap(new_main.camera_id, old_main.camera_id);
 
 
 
@@ -297,7 +301,7 @@ std::swap(new_main.camera_id, old_main.camera_id);
 	static const char* cam_name[8] = {
 		"MAIN","FRONT","SIDE","TOP","CCTV-A","CCTV-B","CCTV-C","CCTV-D" };
 	fprintf(stdout, "[DEBUG] Active-Cam switched → %s (%d)\n",
-		cam_name[g_active_cam_id], g_active_cam_id);
+		cam_name[g_cur_cam_id], g_cur_cam_id);
 
 
 	glutPostRedisplay();

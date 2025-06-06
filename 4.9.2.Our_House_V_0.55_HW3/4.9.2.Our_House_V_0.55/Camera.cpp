@@ -111,7 +111,7 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 
 		cam_proj.params.pers.fovy = 28.f * TO_RADIAN;
 
-		ViewMatrix = glm::lookAt(glm::vec3(125.f, 150.f, 155.f),
+		ViewMatrix = glm::lookAt(glm::vec3(125.f, 1250.f, 155.f),
 			glm::vec3(125.f, 80.f, 25.f),
 			glm::vec3(0.f, 0.f, 1.f));
 		extract_axes(*this);
@@ -132,7 +132,7 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 		flag_move = true;
 		cam_proj.params.pers.fovy = 25.f * TO_RADIAN;
 
-		ViewMatrix = glm::lookAt(glm::vec3(200.f, 10.f, 150.f),
+		ViewMatrix = glm::lookAt(glm::vec3(125.f, 150.f, 155.f),
 			glm::vec3(125.f, 80.f, 30.f),
 			glm::vec3(0.f, 0.f, 1.f));
 		extract_axes(*this);
