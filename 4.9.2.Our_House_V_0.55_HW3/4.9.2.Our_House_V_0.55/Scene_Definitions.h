@@ -30,7 +30,8 @@ extern unsigned int shader_ID_mapper[N_MAX_SHADERS];
 enum STATIC_OBJECT_ID {
 	STATIC_OBJECT_BUILDING = 0, STATIC_OBJECT_TABLE, STATIC_OBJECT_LIGHT,
 	STATIC_OBJECT_TEAPOT, STATIC_OBJECT_NEW_CHAIR,
-	STATIC_OBJECT_FRAME, STATIC_OBJECT_NEW_PICTURE, STATIC_OBJECT_COW
+	STATIC_OBJECT_FRAME, STATIC_OBJECT_NEW_PICTURE, 
+	STATIC_OBJECT_BIKE, STATIC_OBJECT_CAT, STATIC_OBJECT_IRONMAN, STATIC_OBJECT_DRAGON, STATIC_OBJECT_WOOD_TOWER
 };
 
 enum DYNAMIC_OBJECT_ID {
@@ -145,8 +146,29 @@ struct New_Picture : public Static_Object {
 	New_Picture(STATIC_OBJECT_ID _object_id) : Static_Object(_object_id) {}
 	void define_object();
 };
-struct Cow : public Static_Object {
-	Cow(STATIC_OBJECT_ID _object_id) : Static_Object(_object_id) {}
+
+struct Bike : public Static_Object {
+	Bike(STATIC_OBJECT_ID _object_id) : Static_Object(_object_id) {}
+	void define_object();
+};
+
+struct Cat : public Static_Object {
+	Cat(STATIC_OBJECT_ID _object_id) : Static_Object(_object_id) {}
+	void define_object();
+};
+
+struct Ironman : public Static_Object {
+	Ironman(STATIC_OBJECT_ID _object_id) : Static_Object(_object_id) {}
+	void define_object();
+};
+
+struct Dragon : public Static_Object {
+	Dragon(STATIC_OBJECT_ID _object_id) : Static_Object(_object_id) {}
+	void define_object();
+};
+
+struct Wood_Tower : public Static_Object {
+	Wood_Tower(STATIC_OBJECT_ID _object_id) : Static_Object(_object_id) {}
 	void define_object();
 };
 
@@ -158,7 +180,12 @@ struct Static_Geometry_Data {
 	New_Chair new_chair{ STATIC_OBJECT_NEW_CHAIR };
 	Frame frame{ STATIC_OBJECT_FRAME };
 	New_Picture new_picture{ STATIC_OBJECT_NEW_PICTURE };
-	Cow cow{ STATIC_OBJECT_COW };
+	Bike bike{ STATIC_OBJECT_BIKE };
+	Cat cat{ STATIC_OBJECT_CAT };
+	Ironman ironman{ STATIC_OBJECT_IRONMAN };
+	Dragon dragon{ STATIC_OBJECT_DRAGON };
+	Wood_Tower wood_tower{ STATIC_OBJECT_WOOD_TOWER };
+
 };
 
 struct Dynamic_Object { // an object that moves

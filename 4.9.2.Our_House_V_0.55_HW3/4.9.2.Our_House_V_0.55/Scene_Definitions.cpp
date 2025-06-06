@@ -238,9 +238,27 @@ void Scene::build_static_world() {
 	static_object_ID_mapper[STATIC_OBJECT_BUILDING] = static_objects.size();
 	static_objects.push_back(static_geometry_data.new_picture);
 
-	static_geometry_data.cow.define_object();
-	static_object_ID_mapper[STATIC_OBJECT_BUILDING] = static_objects.size();
-	static_objects.push_back(static_geometry_data.cow);
+	
+
+	static_geometry_data.bike.define_object();          // ID = BIKE
+	static_object_ID_mapper[STATIC_OBJECT_BIKE] = static_objects.size();
+	static_objects.push_back(static_geometry_data.bike);
+
+	static_geometry_data.cat.define_object();           // ID = CAT
+	static_object_ID_mapper[STATIC_OBJECT_CAT] = static_objects.size();
+	static_objects.push_back(static_geometry_data.cat);
+
+	static_geometry_data.ironman.define_object();       // ID = IRONMAN
+	static_object_ID_mapper[STATIC_OBJECT_IRONMAN] = static_objects.size();
+	static_objects.push_back(static_geometry_data.ironman);
+
+	static_geometry_data.dragon.define_object();        // ID = DRAGON
+	static_object_ID_mapper[STATIC_OBJECT_DRAGON] = static_objects.size();
+	static_objects.push_back(static_geometry_data.dragon);
+
+	static_geometry_data.wood_tower.define_object();    // ID = WOOD_TOWER
+	static_object_ID_mapper[STATIC_OBJECT_WOOD_TOWER] = static_objects.size();
+	static_objects.push_back(static_geometry_data.wood_tower);
 }
 
 void Scene::build_dynamic_world() {
