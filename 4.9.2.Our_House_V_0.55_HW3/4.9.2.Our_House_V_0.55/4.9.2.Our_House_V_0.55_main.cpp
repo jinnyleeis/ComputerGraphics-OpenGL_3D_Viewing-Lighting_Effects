@@ -13,7 +13,7 @@ const float WOLF_STEP = 5.f;   // 한 번 누를 때 이동 거리
 
 // 현재 조작 대상 카메라 – 기본은 MAIN, '8' 을 누르면 CCTV_D 로 전환
 static Camera_ID   g_active_cam_id = CAMERA_MAIN;
-#define CAM_AXIS_LENGTH 40.0f
+#define CAM_AXIS_LENGTH 1.0f
 
 inline void update_axis_mm(Camera& cam)
 {

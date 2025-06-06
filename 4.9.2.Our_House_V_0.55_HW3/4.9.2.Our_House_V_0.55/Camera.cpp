@@ -4,7 +4,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "Camera.h"
 #include <glm/gtc/matrix_transform.hpp>
-#define CAM_AXIS_LENGTH 40.0f
+#define CAM_AXIS_LENGTH 5.0f
 
 #define TO_RADIAN 0.01745329252f
 #define TO_DEGREE 57.295779513f

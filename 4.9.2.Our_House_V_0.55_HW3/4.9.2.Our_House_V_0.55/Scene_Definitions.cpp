@@ -134,38 +134,34 @@ void Axis_Object::draw_axis(Shader_Simple* shader_simple, glm::mat4& ViewMatrix,
 	glBindVertexArray(0);
 	glUseProgram(0);
 }
+
+#define WC_AXIS_LENGTH_2 0.4f
+
 void Axis_Object::draw_axis_with_model(Shader_Simple* shader_simple,
 	glm::mat4& ViewMatrix,
 	glm::mat4& ProjectionMatrix,
 	const glm::mat4& ModelMatrix)
 {
-	glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
+	glm::mat4 ScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.05f));
+
+	glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix*ScaleMatrix;
 
 	/* DEBUG: MVP 프린트 */
 	// (한 번만 보고 싶으면 static bool once=true 조건으로)
 	// fprintf(stdout, "MVP[3] = (%.2f, %.2f, %.2f, %.2f)\n",
 	//         MVP[3][0], MVP[3][1], MVP[3][2], MVP[3][3]);
+	glUseProgram(shader_simple->h_ShaderProgram);
+	glUniformMatrix4fv(shader_simple->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
 
-	glUseProgram(shader_simple->h_ShaderProgram);          GL_CHECK
-		glUniformMatrix4fv(shader_simple->loc_ModelViewProjectionMatrix,
-			1, GL_FALSE, &MVP[0][0]);           GL_CHECK
 
-		glBindVertexArray(VAO);                                GL_CHECK
-		glLineWidth(40.0f);
-	glDisable(GL_DEPTH_TEST);      // 축은 항상 보이게
-	glDisable(GL_CULL_FACE);
-
-	// X축
-	glUniform3fv(shader_simple->loc_primitive_color, 1, axes_color[0]); GL_CHECK
-		glDrawArrays(GL_LINES, 0, 2);                                         GL_CHECK
-		// Y축
-		glUniform3fv(shader_simple->loc_primitive_color, 1, axes_color[1]);
+	glBindVertexArray(VAO);
+	glUniform3fv(shader_simple->loc_primitive_color, 1, axes_color[0]);
+	glDrawArrays(GL_LINES, 0, 2);
+	glUniform3fv(shader_simple->loc_primitive_color, 1, axes_color[1]);
 	glDrawArrays(GL_LINES, 2, 2);
-	// Z축
 	glUniform3fv(shader_simple->loc_primitive_color, 1, axes_color[2]);
 	glDrawArrays(GL_LINES, 4, 2);
-
-	glEnable(GL_DEPTH_TEST);
 	glBindVertexArray(0);
 	glUseProgram(0);
 }
@@ -362,8 +358,15 @@ void Scene::draw_axis() {
 		ViewMatrix, ProjectionMatrix);
 }
 
+void Scene::draw_axis_with_model(const Camera& cam) {
+	axis_object.draw_axis_with_model(static_cast<Shader_Simple*>(&shader_list[shader_ID_mapper[SHADER_SIMPLE]].get()),
+		ViewMatrix, ProjectionMatrix,cam.ModelMatrix_axis);
+}
+
+
 void Scene::draw_world() {
 	draw_axis();
+    draw_axis_with_model(camera_data.cam_main); // 메인 카메라 축
 	draw_static_world();
 	draw_dynamic_world();
 }
@@ -388,7 +391,7 @@ const int Scene::floor_mask[Scene::H][Scene::W] = {
 };
 
 // Scene_Definitions.cpp
-#define CAM_AXIS_LENGTH 40.0f
+#define CAM_AXIS_LENGTH 5.0f
 
 void Scene::draw_cam_frame(const Camera& cam) {
 
@@ -420,11 +423,11 @@ void Scene::draw_cam_frame(const Camera& cam) {
 	Shader_Simple* sh =
 		static_cast<Shader_Simple*>(&shader_list[shader_ID_mapper[SHADER_SIMPLE]].get());
 
-	axis_object.draw_axis_with_model(
-		sh,
-		ViewMatrix,            // 현재 뷰포트의 V
-		ProjectionMatrix,      // 현재 뷰포트의 P
-		cam.ModelMatrix_axis); // ★ 카메라에 ‘붙어 있는’ 축
+	//axis_object.draw_axis_with_model(
+	//	sh,
+	//	ViewMatrix,            // 현재 뷰포트의 V
+		//ProjectionMatrix,      // 현재 뷰포트의 P
+		//cam.ModelMatrix_axis); // ★ 카메라에 ‘붙어 있는’ 축
 
 	// ⑥ 상태 복구
 	glLineWidth(1.f);

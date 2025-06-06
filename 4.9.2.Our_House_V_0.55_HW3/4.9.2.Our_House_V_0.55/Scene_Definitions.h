@@ -288,6 +288,7 @@ struct Scene {
 	void draw_static_world();
 	void draw_dynamic_world();
 	void draw_axis();
+	void draw_axis_with_model(const Camera& cam);
 	void draw_world();
 	void update_main_camera_follow_wolf();
 	void draw_cam_frame(const Camera& cam);   // <-- 아래 1-B 구현
