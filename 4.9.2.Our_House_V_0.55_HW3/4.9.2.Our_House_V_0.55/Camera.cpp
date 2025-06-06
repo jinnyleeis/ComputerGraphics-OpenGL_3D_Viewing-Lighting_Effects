@@ -65,15 +65,14 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 		view_port.x = 200; view_port.y = 200; view_port.w = win_width - 200; view_port.h = win_height - 200;
 		break;
 
-		/*------------------------------------ 고정 CCTV 3대 ------------------*/
-	case CAMERA_CCTV_A: {        /* 정면 오른쪽 상단 */
-
+		/*------------------------------------ CCTV A ------------------*/
+	case CAMERA_CCTV_A: {            // 동쪽 벽 안쪽 상단
 		flag_valid = true;
-
 		cam_proj.params.pers.fovy = 30.f * TO_RADIAN;
 
-		ViewMatrix = glm::lookAt(glm::vec3(30.f, 20.f, 160.f),
-			glm::vec3(100.f, 80.f, 20.f),
+		ViewMatrix = glm::lookAt(
+			glm::vec3(200.f, 30.f, 150.f),   // ← (220·160 범위 안)
+			glm::vec3(125.f, 80.f, 25.f),   // 중앙 로비
 			glm::vec3(0.f, 0.f, 1.f));
 		extract_axes(*this);
 
@@ -81,18 +80,16 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 			cam_proj.params.pers.aspect,
 			cam_proj.params.pers.n,
 			cam_proj.params.pers.f);
-
 		view_port = { 0.f, (float)win_height - 240.f, 240.f, 240.f };
 		break;
 	}
-	case CAMERA_CCTV_B: {        /* 후면 */
-
+					  /*------------------------------------ CCTV B ------------------*/
+	case CAMERA_CCTV_B: {            // 북동쪽 구석 천장
 		flag_valid = true;
-
-
 		cam_proj.params.pers.fovy = 32.f * TO_RADIAN;
 
-		ViewMatrix = glm::lookAt(glm::vec3(220.f, 20.f, 160.f),
+		ViewMatrix = glm::lookAt(
+			glm::vec3(200.f, 140.f, 150.f),   // ← 실내
 			glm::vec3(125.f, 80.f, 25.f),
 			glm::vec3(0.f, 0.f, 1.f));
 		extract_axes(*this);
@@ -101,17 +98,16 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 			cam_proj.params.pers.aspect,
 			cam_proj.params.pers.n,
 			cam_proj.params.pers.f);
-
 		view_port = { 0.f, (float)win_height - 480.f, 240.f, 240.f };
 		break;
 	}
-	case CAMERA_CCTV_C: {        /* 좌측 구석 */
-
+					  /*------------------------------------ CCTV C ------------------*/
+	case CAMERA_CCTV_C: {            // 북서쪽 구석 천장
 		flag_valid = true;
-
 		cam_proj.params.pers.fovy = 28.f * TO_RADIAN;
 
-		ViewMatrix = glm::lookAt(glm::vec3(125.f, 1250.f, 155.f),
+		ViewMatrix = glm::lookAt(
+			glm::vec3(50.f, 140.f, 155.f),   // ← 기존 1250 → 140 로 수정
 			glm::vec3(125.f, 80.f, 25.f),
 			glm::vec3(0.f, 0.f, 1.f));
 		extract_axes(*this);
@@ -120,19 +116,17 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 			cam_proj.params.pers.aspect,
 			cam_proj.params.pers.n,
 			cam_proj.params.pers.f);
-
 		view_port = { 0.f, (float)win_height - 720.f, 240.f, 240.f };
 		break;
 	}
-					  /*------------------------------- 동적 CCTV (FOV/방향 조절) -----------*/
-	case CAMERA_CCTV_D_REMOTE: {
-
-
+					  /*-------------------------------- CCTV-D (REMOTE) -------------*/
+	case CAMERA_CCTV_D_REMOTE: {     // 중앙 천장(조종 가능)
 		flag_valid = true;
 		flag_move = true;
 		cam_proj.params.pers.fovy = 25.f * TO_RADIAN;
 
-		ViewMatrix = glm::lookAt(glm::vec3(125.f, 150.f, 155.f),
+		ViewMatrix = glm::lookAt(
+			glm::vec3(125.f, 90.f, 155.f),   // ← 실내 중앙
 			glm::vec3(125.f, 80.f, 30.f),
 			glm::vec3(0.f, 0.f, 1.f));
 		extract_axes(*this);
@@ -141,10 +135,10 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 			cam_proj.params.pers.aspect,
 			cam_proj.params.pers.n,
 			cam_proj.params.pers.f);
-
 		view_port = { 260.f, (float)win_height - 160.f, 260.f, 160.f };
 		break;
 	}
+
 							 /*---------------------------------- 정의되지 않은 ID ------------------*/
 	default:
 		flag_valid = false;

@@ -17,6 +17,11 @@ static Camera_ID   g_active_cam_id = CAMERA_MAIN;
 static Camera_ID g_cur_cam_id = CAMERA_MAIN;
 static Camera_ID g_prev_cam_id = CAMERA_MAIN;   // 최초엔 동일
 
+enum CamFrameMode { FRM_NONE = 0, FRM_MAIN_ONLY, FRM_CCTV_ONLY, FRM_ALL };
+static CamFrameMode g_frame_mode = FRM_MAIN_ONLY;   // 시작은 ‘주카메라만’
+
+
+
 inline void update_axis_mm(Camera& cam)
 {
 	constexpr float AXIS_LEN = CAM_AXIS_LENGTH;     // Scene_Definitions.cpp에 이미 존재
@@ -190,6 +195,20 @@ void display(void) {
 			/* ────────── 카메라-프레임 토글 : Y ────────── */
 		case 'y': scene.show_camframe = !scene.show_camframe; glutPostRedisplay(); break;
 
+		case 't':   // 소문자 t : **현재(Active) 카메라만** 토글
+		{
+			bool anyOn = false;
+			for (auto& cref : scene.camera_list)
+				anyOn |= cref.get().flag_show_frame;
+
+			// 하나라도 켜져 있으면 → 모두 끔, 전부 꺼져 있으면 → 모두 켬
+			bool newState = !anyOn;
+			for (auto& cref : scene.camera_list)
+				cref.get().flag_show_frame = newState;
+
+			glutPostRedisplay();
+			break;
+		}
 
 		case 'w': move_wolf(WOLF_STEP, 0);  break;
 		case 's':move_wolf(-WOLF_STEP, 0); break;    // 동(+x)

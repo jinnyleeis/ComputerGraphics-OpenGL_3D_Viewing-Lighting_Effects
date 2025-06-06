@@ -46,6 +46,7 @@ struct Camera {
 	Camera(Camera_ID _camera_id) : camera_id(_camera_id) {}
 	bool flag_valid;
 	bool flag_move; // what else?
+	bool flag_show_frame = false;
 };
 
 struct Perspective_Camera : public Camera {

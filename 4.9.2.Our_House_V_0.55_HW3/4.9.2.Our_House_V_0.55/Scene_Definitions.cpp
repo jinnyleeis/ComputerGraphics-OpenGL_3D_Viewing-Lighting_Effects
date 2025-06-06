@@ -366,8 +366,11 @@ void Scene::draw_axis_with_model(const Camera& cam) {
 
 void Scene::draw_world() {
 	draw_axis();
-    draw_axis_with_model(camera_data.cam_main); // 메인 카메라 축
-	draw_axis_with_model(camera_data.cam_cctv_d); // CCTV 원격 카메라 축
+	for (auto& cref : camera_list) {      // 카메라별 프레임
+		const Camera& cam = cref.get();
+		if (cam.flag_show_frame)
+			draw_axis_with_model(cam);    // RGB 축 그리기
+	}
 	draw_static_world();
 	draw_dynamic_world();
 }
