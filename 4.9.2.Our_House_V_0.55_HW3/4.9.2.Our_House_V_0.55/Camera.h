@@ -42,7 +42,7 @@ struct Camera {
 	Camera_Projection cam_proj;
 	glm::mat4 ProjectionMatrix;
 	View_Port view_port;
-
+	glm::mat4  ModelMatrix_axis = glm::mat4(1.0f);
 	Camera(Camera_ID _camera_id) : camera_id(_camera_id) {}
 	bool flag_valid;
 	bool flag_move; // what else?
@@ -71,3 +71,5 @@ struct Camera_Data {
 	Orthographic_Camera cam_side{ CAMERA_SIDE };
 	Orthographic_Camera cam_top{ CAMERA_TOP };
 };
+
+inline void sync_cam_axes_from_view(Camera& cam);

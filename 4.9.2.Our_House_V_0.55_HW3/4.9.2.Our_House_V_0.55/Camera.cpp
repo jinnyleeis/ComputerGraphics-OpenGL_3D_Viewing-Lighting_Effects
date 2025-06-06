@@ -4,10 +4,17 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "Camera.h"
 #include <glm/gtc/matrix_transform.hpp>
+#define CAM_AXIS_LENGTH 40.0f
 
 #define TO_RADIAN 0.01745329252f
 #define TO_DEGREE 57.295779513f
-
+inline void update_axis_mm(Camera& cam)
+{
+	constexpr float AXIS_LEN = CAM_AXIS_LENGTH;     // Scene_Definitions.cpp에 이미 존재
+	glm::mat4 M_camWorld = glm::inverse(cam.ViewMatrix);
+	cam.ModelMatrix_axis = M_camWorld *
+		glm::scale(glm::mat4(1.0f), glm::vec3(AXIS_LEN));
+}
  /*-------------------------------------------------------------------------*/
  /*ViewMatrix ➜ Camera_View(u,v,n,pos) 추출                        */
  /*-------------------------------------------------------------------------*/

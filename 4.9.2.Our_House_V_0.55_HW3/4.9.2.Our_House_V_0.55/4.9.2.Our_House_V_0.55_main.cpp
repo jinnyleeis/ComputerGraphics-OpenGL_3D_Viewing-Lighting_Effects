@@ -5,6 +5,7 @@
 #include <GL/freeglut.h>
 #include "Shaders/LoadShaders.h"
 #include "Scene_Definitions.h"
+#include "Camera.h"
 #include <glm/gtc/matrix_transform.hpp>     
 #include <glm/gtx/normalize_dot.hpp>       
 
@@ -12,9 +13,15 @@ const float WOLF_STEP = 5.f;   // 한 번 누를 때 이동 거리
 
 // 현재 조작 대상 카메라 – 기본은 MAIN, '8' 을 누르면 CCTV_D 로 전환
 static Camera_ID   g_active_cam_id = CAMERA_MAIN;
+#define CAM_AXIS_LENGTH 40.0f
 
-
-
+inline void update_axis_mm(Camera& cam)
+{
+	constexpr float AXIS_LEN = CAM_AXIS_LENGTH;     // Scene_Definitions.cpp에 이미 존재
+	glm::mat4 M_camWorld = glm::inverse(cam.ViewMatrix);
+	cam.ModelMatrix_axis = M_camWorld *
+		glm::scale(glm::mat4(1.0f), glm::vec3(AXIS_LEN));
+}
 
 inline bool is_walkable(float x, float y)
 {
@@ -96,6 +103,7 @@ void rebuild_view(Camera& cam) {
 		cam.cam_view.pos - cam.cam_view.naxis,
 		cam.cam_view.vaxis
 	);
+	update_axis_mm(cam);
 }
 
 void rebuild_perspective(Camera& cam) {
@@ -109,6 +117,8 @@ void rebuild_perspective(Camera& cam) {
 	fprintf(stdout, "[DEBUG] rebuild_perspective (fovy : %.1f, asp : %.1f,  near : %.1f, far : (%.1f) view NewPos=(%.1f,%.1f,%.1f)\n",
 		cam.cam_proj.params.pers.fovy, cam.cam_proj.params.pers.aspect, cam.cam_proj.params.pers.n, cam.cam_proj.params.pers.f,
 		cam.cam_view.pos.x, cam.cam_view.pos.y, cam.cam_view.pos.z);
+	update_axis_mm(cam);
+
 }
 
 // 카메라 이동 (u,v,n)
@@ -148,13 +158,14 @@ void display(void) {
 			camera->get().view_port.w, camera->get().view_port.h);
 		scene.ViewMatrix = camera->get().ViewMatrix;
 		scene.ProjectionMatrix = camera->get().ProjectionMatrix;
-		scene.draw_cam_frame(camera->get());
 	
 		if (scene.show_axes)
 		scene.axis_object.draw_axis(
 			static_cast<Shader_Simple*>(
 					&scene.shader_list[shader_ID_mapper[SHADER_SIMPLE]]
 				  .get()), scene.ViewMatrix, scene.ProjectionMatrix);
+		scene.draw_cam_frame(camera->get());
+
 		scene.draw_world();
 	}
 	glutSwapBuffers();
