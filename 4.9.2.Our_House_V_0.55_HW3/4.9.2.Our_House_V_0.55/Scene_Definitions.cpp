@@ -17,6 +17,8 @@ unsigned int shader_ID_mapper[N_MAX_SHADERS];
             fprintf(stderr, "[GL_ERROR] 0x%X at %s:%d\n", err, __FILE__, __LINE__);          \
     }
 
+
+
 struct PathSeg {
 	glm::vec3 from, to;
 	float     dur;          // milli-seconds
@@ -49,7 +51,27 @@ static const PathSeg SPIDER_PATH[] = {
 };
 static const int N_SPIDER_SEG = sizeof(SPIDER_PATH) / sizeof(PathSeg);
 
-#define CAM_AXIS_LENGTH 40.0f
+#define CAM_AXIS_LENGTH 20.0f
+/*--------------------------------------------------------------*/
+/*  모든 카메라 공통: ViewMatrix → (u,v,n,pos) & ModelMatrix_axis*/
+/*--------------------------------------------------------------*/
+inline void rebuild_cam_axes_and_mm(Camera& cam, float scale_mul = 20.f)
+{
+	/* (1) u,v,n,pos 계산 --------------*/
+	glm::mat3 R = glm::mat3(cam.ViewMatrix);
+	glm::mat3 RT = glm::transpose(R);
+	cam.cam_view.uaxis = glm::vec3(R[0][0], R[1][0], R[2][0]);
+	cam.cam_view.vaxis = glm::vec3(R[0][1], R[1][1], R[2][1]);
+	cam.cam_view.naxis = glm::vec3(R[0][2], R[1][2], R[2][2]);
+	glm::mat4 T = glm::mat4(RT) * cam.ViewMatrix;
+	cam.cam_view.pos = -glm::vec3(T[3]);
+
+	/* (2) 계층적 ModelMatrix ----------*/
+	glm::mat4 M_world = glm::inverse(cam.ViewMatrix);
+	cam.ModelMatrix_axis = M_world *
+		glm::scale(glm::mat4(1.f),
+			glm::vec3(CAM_AXIS_LENGTH * scale_mul));
+}
 
 
 void Scene::update_main_camera_follow_wolf() {
@@ -79,17 +101,7 @@ void Scene::update_main_camera_follow_wolf() {
 	glm::mat4 M_cam = M_wolf * M_eye * M_camRot;
 	cam.ViewMatrix = glm::inverse(M_cam);
 
-	/* 5) 내부축 업데이트(디버그/프레임 그리기용) */
-	cam.cam_view.pos = glm::vec3(M_cam[3]);
-	cam.cam_view.uaxis = glm::normalize(glm::vec3(M_cam[0]));
-	cam.cam_view.vaxis = glm::normalize(glm::vec3(M_cam[1]));
-	cam.cam_view.naxis = glm::normalize(glm::vec3(M_cam[2]));
-
-	/* 6) 디버그 축(ModelMatrix) 도 계층적으로 붙여둔다 ★ */
-	cam.ModelMatrix_axis = M_cam *
-		glm::scale(glm::mat4(1.f), glm::vec3(CAM_AXIS_LENGTH*20));
-
-
+	rebuild_cam_axes_and_mm(cam, 100.f);  // 메인은 계속 20배
 	printf("[AXIS_MM] pos = (%.1f, %.1f, %.1f)\n",
 		cam.cam_view.pos.x, cam.cam_view.pos.y, cam.cam_view.pos.z);
 
@@ -165,6 +177,26 @@ void Axis_Object::draw_axis_with_model(Shader_Simple* shader_simple,
 	glBindVertexArray(0);
 	glUseProgram(0);
 }
+static void debug_axis_mm(const Camera& cam, const char* tag)
+{
+	// 1회만 찍고 싶으면 static bool once = true; 조건으로 감싸도 됨
+	fprintf(stderr,
+		"[%s] POS=(%.1f, %.1f, %.1f)  | scale ≈ %.1f\n",
+		tag,
+		cam.ModelMatrix_axis[3][0],
+		cam.ModelMatrix_axis[3][1],
+		cam.ModelMatrix_axis[3][2],
+		glm::length(glm::vec3(cam.ModelMatrix_axis[0])));
+}
+
+inline void update_axis_mm(Camera& cam)
+{
+	constexpr float AXIS_LEN = CAM_AXIS_LENGTH;     // Scene_Definitions.cpp에 이미 존재
+	glm::mat4 M_camWorld = glm::inverse(cam.ViewMatrix);
+	cam.ModelMatrix_axis = M_camWorld *
+		glm::scale(glm::mat4(1.0f), glm::vec3(AXIS_LEN));
+}
+
 
 /* ──────────────────────────────────────────────────────────── *
  *  Scene::clock 수정 – 매틱마다 카메라 추적 갱신
@@ -173,6 +205,7 @@ void Scene::clock(int clock_id)
 {
 	time_stamp = (time_stamp + 1U) % UINT_MAX; // 다른 동적 오브젝트 프레임용
 	update_main_camera_follow_wolf();      // 늑대 추적
+	rebuild_cam_axes_and_mm(camera_data.cam_cctv_d, 100.f);  // ★ 추가
 
 }
 
@@ -366,13 +399,14 @@ void Scene::draw_axis_with_model(const Camera& cam) {
 
 void Scene::draw_world() {
 	draw_axis();
-	for (auto& cref : camera_list) {      // 카메라별 프레임
-		const Camera& cam = cref.get();
-		if (cam.flag_show_frame)
-			draw_axis_with_model(cam);    // RGB 축 그리기
+	if (show_camframe) {      
+		// 1 키로 토글
+		draw_axis_with_model(camera_data.cam_main);
+		draw_axis_with_model(camera_data.cam_cctv_d);
 	}
 	draw_static_world();
 	draw_dynamic_world();
+
 }
 const int Scene::floor_mask[Scene::H][Scene::W] = {
 	/* y =  0 */ { /*0-7*/ 1,1,1,1,1,1,1,1,   /*8-15*/ 1,1,1,1,1,1,1,1,   /*16-22*/ 1,1,1,1,1,1,1 },
@@ -394,46 +428,4 @@ const int Scene::floor_mask[Scene::H][Scene::W] = {
 	/* y = 16 */ { /*0-7*/ 1,1,1,1,1,1,1,1,   /*8-15*/ 1,1,1,1,1,1,1,1,   /*16-22*/ 1,1,1,1,1,1,1 }
 };
 
-// Scene_Definitions.cpp
-#define CAM_AXIS_LENGTH 5.0f
 
-void Scene::draw_cam_frame(const Camera& cam) {
-
-
-	// ① 깊이 검사 끄기 → 축이 다른 지형보다 항상 보이도록
-	GLboolean depthWas;
-	glGetBooleanv(GL_DEPTH_TEST, &depthWas);
-	glDisable(GL_DEPTH_TEST);
-
-	// ② 선 두께 키우기
-	glLineWidth(3.f);
-
-	// ─────────── 새로 작성한 부분 ───────────
-  //   ① 위치  : cam.cam_view.pos
-  //   ② 회전  : [u v -n]  (Z축은 앞을 바라보는 +n 대신 -n 이 파랑)
-  //   ③ 스케일 : CAM_AXIS_LENGTH
-	glm::mat4 T = glm::translate(glm::mat4(1.0f), cam.cam_view.pos);
-	glm::mat4 R(1.0f);
-	R[0] = glm::vec4(glm::normalize(cam.cam_view.uaxis), 0.0f);
-	R[1] = glm::vec4(glm::normalize(cam.cam_view.vaxis), 0.0f);
-	R[2] = glm::vec4(glm::normalize(-cam.cam_view.naxis), 0.0f); // +Z(파랑) = 앞 방향
-	glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(CAM_AXIS_LENGTH));
-
-
-	glm::mat4 M_camAxis = T * R * S;       // 최종 ModelMatrix
-	// ──────────────────────────────────────
-
-	// 축 그리기
-	Shader_Simple* sh =
-		static_cast<Shader_Simple*>(&shader_list[shader_ID_mapper[SHADER_SIMPLE]].get());
-
-	//axis_object.draw_axis_with_model(
-	//	sh,
-	//	ViewMatrix,            // 현재 뷰포트의 V
-		//ProjectionMatrix,      // 현재 뷰포트의 P
-		//cam.ModelMatrix_axis); // ★ 카메라에 ‘붙어 있는’ 축
-
-	// ⑥ 상태 복구
-	glLineWidth(1.f);
-	if (depthWas) glEnable(GL_DEPTH_TEST);
-}

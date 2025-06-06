@@ -18,9 +18,19 @@ static Camera_ID g_cur_cam_id = CAMERA_MAIN;
 static Camera_ID g_prev_cam_id = CAMERA_MAIN;   // 최초엔 동일
 
 enum CamFrameMode { FRM_NONE = 0, FRM_MAIN_ONLY, FRM_CCTV_ONLY, FRM_ALL };
-static CamFrameMode g_frame_mode = FRM_MAIN_ONLY;   // 시작은 ‘주카메라만’
+static CamFrameMode g_frame_mode = FRM_ALL;   // 시작은 ‘주카메라만’
 
-
+static void debug_axis_mm(const Camera& cam, const char* tag)
+{
+	// 1회만 찍고 싶으면 static bool once = true; 조건으로 감싸도 됨
+	fprintf(stderr,
+		"[%s] POS=(%.1f, %.1f, %.1f)  | scale ≈ %.1f\n",
+		tag,
+		cam.ModelMatrix_axis[3][0],
+		cam.ModelMatrix_axis[3][1],
+		cam.ModelMatrix_axis[3][2],
+		glm::length(glm::vec3(cam.ModelMatrix_axis[0])));
+}
 
 inline void update_axis_mm(Camera& cam)
 {
@@ -127,6 +137,7 @@ void rebuild_perspective(Camera& cam) {
 		cam.cam_view.pos.x, cam.cam_view.pos.y, cam.cam_view.pos.z);
 	update_axis_mm(cam);
 
+
 }
 
 // 카메라 이동 (u,v,n)
@@ -172,7 +183,7 @@ void display(void) {
 			static_cast<Shader_Simple*>(
 					&scene.shader_list[shader_ID_mapper[SHADER_SIMPLE]]
 				  .get()), scene.ViewMatrix, scene.ProjectionMatrix);
-		scene.draw_cam_frame(camera->get());
+		//scene.draw_cam_frame(camera->get());
 
 		scene.draw_world();
 	}

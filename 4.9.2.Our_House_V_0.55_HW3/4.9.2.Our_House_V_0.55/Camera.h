@@ -73,4 +73,3 @@ struct Camera_Data {
 	Orthographic_Camera cam_top{ CAMERA_TOP };
 };
 
-inline void sync_cam_axes_from_view(Camera& cam);
