@@ -221,10 +221,10 @@ void display(void) {
 			break;
 		}
 
-		case 'w': move_wolf(WOLF_STEP, 0);  break;
-		case 's':move_wolf(-WOLF_STEP, 0); break;    // 동(+x)
-		case 'a': move_wolf(0, WOLF_STEP); break;   // 북(+y)
-		case 'd':move_wolf(0, -WOLF_STEP); break;   // 남(-y)
+		case 'd': move_wolf(WOLF_STEP, 0);  break;
+		case 'a':move_wolf(-WOLF_STEP, 0); break;    // 동(+x)
+		case 'w': move_wolf(0, WOLF_STEP); break;   // 북(+y)
+		case 's':move_wolf(0, -WOLF_STEP); break;   // 남(-y)
 
 		case 'r': if (g_cur_cam_id == CAMERA_MAIN)
 			translate_camera(cam, cam.cam_view.vaxis, MOVE_STEP); break;

@@ -139,7 +139,7 @@ void Frame::define_object() {
 	instances.emplace_back();
 	cur_MM = &(instances.back().ModelMatrix);
 	*cur_MM = glm::translate(glm::mat4(1.0f), glm::vec3(188.0f, 116.0f, 30.0f));
-	*cur_MM = glm::scale(*cur_MM, glm::vec3(20.6f, 0.6f, 0.6f));
+	*cur_MM = glm::scale(*cur_MM, glm::vec3(0.6f, 0.6f, 0.6f));
 	*cur_MM = glm::rotate(*cur_MM, 90.0f * TO_RADIAN, glm::vec3(0.0f, 1.0f, 0.0f));
 	cur_material = &(instances.back().material);
 	cur_material->emission = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
