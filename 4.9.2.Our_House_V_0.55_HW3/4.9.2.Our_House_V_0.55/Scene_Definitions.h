@@ -28,9 +28,9 @@ extern unsigned int camera_ID_mapper[N_MAX_CAMERAS];
 extern unsigned int shader_ID_mapper[N_MAX_SHADERS];
 
 enum STATIC_OBJECT_ID {
-	STATIC_OBJECT_BUILDING = 0, STATIC_OBJECT_TABLE, STATIC_OBJECT_LIGHT,
-	STATIC_OBJECT_TEAPOT, STATIC_OBJECT_NEW_CHAIR,
-	STATIC_OBJECT_FRAME, STATIC_OBJECT_NEW_PICTURE, 
+	STATIC_OBJECT_BUILDING = 0, STATIC_OBJECT_TABLE,
+	STATIC_OBJECT_TEAPOT, 
+	STATIC_OBJECT_FRAME, 
 	STATIC_OBJECT_BIKE, STATIC_OBJECT_CAT, STATIC_OBJECT_IRONMAN, STATIC_OBJECT_DRAGON, STATIC_OBJECT_WOOD_TOWER
 };
 
@@ -124,28 +124,17 @@ struct Table : public Static_Object {
 	void define_object();
 };
 
-struct Light : public Static_Object {
-	Light(STATIC_OBJECT_ID _object_id) : Static_Object(_object_id) {}
-	void define_object();
-};
 struct Teapot : public Static_Object {
 	Teapot(STATIC_OBJECT_ID _object_id) : Static_Object(_object_id) {}
 	void define_object();
 };
-struct New_Chair : public Static_Object {
-	New_Chair(STATIC_OBJECT_ID _object_id) : Static_Object(_object_id) {}
-	void define_object();
-};
+
 
 struct Frame : public Static_Object {
 	Frame(STATIC_OBJECT_ID _object_id) : Static_Object(_object_id) {}
 	void define_object();
 };
 
-struct New_Picture : public Static_Object {
-	New_Picture(STATIC_OBJECT_ID _object_id) : Static_Object(_object_id) {}
-	void define_object();
-};
 
 struct Bike : public Static_Object {
 	Bike(STATIC_OBJECT_ID _object_id) : Static_Object(_object_id) {}
@@ -175,11 +164,8 @@ struct Wood_Tower : public Static_Object {
 struct Static_Geometry_Data {
 	Building building{ STATIC_OBJECT_BUILDING };
 	Table table{ STATIC_OBJECT_TABLE };
-	Light light{ STATIC_OBJECT_LIGHT };
 	Teapot teapot{ STATIC_OBJECT_TEAPOT };
-	New_Chair new_chair{ STATIC_OBJECT_NEW_CHAIR };
 	Frame frame{ STATIC_OBJECT_FRAME };
-	New_Picture new_picture{ STATIC_OBJECT_NEW_PICTURE };
 	Bike bike{ STATIC_OBJECT_BIKE };
 	Cat cat{ STATIC_OBJECT_CAT };
 	Ironman ironman{ STATIC_OBJECT_IRONMAN };

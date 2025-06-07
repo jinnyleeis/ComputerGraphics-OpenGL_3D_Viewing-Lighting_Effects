@@ -218,27 +218,14 @@ void Scene::build_static_world() {
 	static_object_ID_mapper[STATIC_OBJECT_BUILDING] = static_objects.size();
 	static_objects.push_back(static_geometry_data.table);
 
-	static_geometry_data.light.define_object();
-	static_object_ID_mapper[STATIC_OBJECT_BUILDING] = static_objects.size();
-	static_objects.push_back(static_geometry_data.light);
-
 	static_geometry_data.teapot.define_object();
 	static_object_ID_mapper[STATIC_OBJECT_BUILDING] = static_objects.size();
 	static_objects.push_back(static_geometry_data.teapot);
 
-	static_geometry_data.new_chair.define_object();
-	static_object_ID_mapper[STATIC_OBJECT_BUILDING] = static_objects.size();
-	static_objects.push_back(static_geometry_data.new_chair);
 
 	static_geometry_data.frame.define_object();
 	static_object_ID_mapper[STATIC_OBJECT_BUILDING] = static_objects.size();
 	static_objects.push_back(static_geometry_data.frame);
-
-	static_geometry_data.new_picture.define_object();
-	static_object_ID_mapper[STATIC_OBJECT_BUILDING] = static_objects.size();
-	static_objects.push_back(static_geometry_data.new_picture);
-
-	
 
 	static_geometry_data.bike.define_object();          // ID = BIKE
 	static_object_ID_mapper[STATIC_OBJECT_BIKE] = static_objects.size();
