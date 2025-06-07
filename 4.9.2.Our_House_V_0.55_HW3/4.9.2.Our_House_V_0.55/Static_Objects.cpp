@@ -332,6 +332,7 @@ void Dragon ::define_object() {
 		*M = glm::translate(glm::mat4(1.0f), glm::vec3(157.0f, 76.5f, 40.0f));
 		*M = glm::scale(*M, glm::vec3(0.3f));
 		*M = glm::rotate(*M, -180.0f * TO_RADIAN, glm::vec3(0.0f, 1.0f, 0.0f));
+		*M = glm::scale(*M, glm::vec3(1.0f,1.0f,-1.0f));
 		mat = &instances.back().material;
 		mat->ambient = glm::vec4(0.15f, 0.05f, 0.05f, 1);
 		mat->diffuse = glm::vec4(0.6f, 0.2f, 0.2f, 1);
