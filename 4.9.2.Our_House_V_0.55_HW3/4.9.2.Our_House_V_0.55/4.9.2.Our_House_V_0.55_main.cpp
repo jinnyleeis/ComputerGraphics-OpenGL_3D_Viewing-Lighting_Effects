@@ -201,12 +201,12 @@ void display(void) {
 		if (g_cur_cam_id == CAMERA_MAIN) {
 			switch (key) {
 				STEP = 5.f * TO_RADIAN;
-			case 'q': scene.g_orbit.roll += STEP; break;
-			case 'e': scene.g_orbit.roll -= STEP; break;
-			case 'w': scene.g_orbit.pitch -= STEP;            break;
-			case 's': scene.g_orbit.pitch += STEP;            break;
-			case 'a': scene.g_orbit.yaw -= STEP;            break;
-			case 'd': scene.g_orbit.yaw += STEP;            break;
+			case 'q': scene.g_orbit.yaw -= STEP; break;
+			case 'e': scene.g_orbit.yaw += STEP; break;
+			case 'w': scene.g_orbit.pitch += STEP;            break;
+			case 's': scene.g_orbit.pitch -= STEP;            break;
+			case 'a': scene.g_orbit.roll -= STEP;            break;
+			case 'd': scene.g_orbit.roll += STEP;            break;
 			default: break;
 			}
 			// clamp & update
@@ -222,12 +222,12 @@ void display(void) {
 		// 3) CCTV-D 카메라용 WSADQE
 		else if (g_cur_cam_id == CAMERA_CCTV_D_REMOTE) {
 			switch (key) {
-			case 'q': rotate_camera(cam, cam.cam_view.naxis, STEP); break;
-			case 'e': rotate_camera(cam, cam.cam_view.naxis, -STEP); break;
+			case 'q': rotate_camera(cam, cam.cam_view.naxis, -STEP); break;
+			case 'e': rotate_camera(cam, cam.cam_view.naxis, +STEP); break;
 			case 'w': rotate_camera(cam, cam.cam_view.uaxis, STEP); break;
 			case 's': rotate_camera(cam, cam.cam_view.uaxis, -STEP); break;
-			case 'a': rotate_camera(cam, cam.cam_view.vaxis, -STEP); break;
-			case 'd': rotate_camera(cam, cam.cam_view.vaxis, STEP); break;
+			case 'a': rotate_camera(cam, cam.cam_view.vaxis, +STEP); break;
+			case 'd': rotate_camera(cam, cam.cam_view.vaxis, -STEP); break;
 			default: break;
 			}
 			fprintf(stdout, "[CAM_UPDATE] CCTV-D camera view matrix updated.\n");
