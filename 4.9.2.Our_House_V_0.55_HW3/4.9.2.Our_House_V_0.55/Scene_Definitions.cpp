@@ -267,15 +267,6 @@ void Scene::build_dynamic_world() {
 	dynamic_objects.push_back(dynamic_geometry_data.tiger_d);
 
 	// two different moving cows
-	dynamic_geometry_data.cow_d_1.define_object();
-	dynamic_object_ID_mapper[DYNAMIC_OBJECT_COW_1] = dynamic_objects.size();
-	dynamic_objects.push_back(dynamic_geometry_data.cow_d_1);
-
-	dynamic_geometry_data.cow_d_2.define_object();
-	dynamic_object_ID_mapper[DYNAMIC_OBJECT_COW_2] = dynamic_objects.size();
-	dynamic_objects.push_back(dynamic_geometry_data.cow_d_2);
-
-	// two different moving cows
 	dynamic_geometry_data.spider_d.define_object();
 	dynamic_object_ID_mapper[DYNAMIC_OBJECT_SPIDER] = dynamic_objects.size();
 	dynamic_objects.push_back(dynamic_geometry_data.spider_d);

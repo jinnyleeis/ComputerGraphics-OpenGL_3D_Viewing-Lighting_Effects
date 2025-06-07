@@ -269,9 +269,10 @@ void Bike::define_object() {
 
 		instances.emplace_back();
 		M = &instances.back().ModelMatrix;
-		*M = glm::translate(glm::mat4(1.f), glm::vec3(45.f, 25.f, 0.f));
-		*M = glm::scale(*M, glm::vec3(10.4f));
-		*M = glm::rotate(*M, -90.f * TO_RADIAN, glm::vec3(0, 0, 1));
+		*M = glm::translate(glm::mat4(1.0f), glm::vec3(100.0f, 50.0f, 0.0f));
+		*M = glm::scale(*M, glm::vec3(3.4f));
+		*M = glm::rotate(*M, -90.f * TO_RADIAN, glm::vec3(0, 1, 0));
+		*M = glm::rotate(*M, -90.f * TO_RADIAN, glm::vec3(1, 0, 0));
 		mat = &instances.back().material;
 		mat->ambient = glm::vec4(0.1f, 0.1f, 0.1f, 1);
 		mat->diffuse = glm::vec4(0.6f, 0.2f, 0.2f, 1);

@@ -35,8 +35,8 @@ enum STATIC_OBJECT_ID {
 };
 
 enum DYNAMIC_OBJECT_ID {
-	DYNAMIC_OBJECT_TIGER = 0, DYNAMIC_OBJECT_COW_1, DYNAMIC_OBJECT_COW_2,
-	DYNAMIC_OBJECT_SPIDER, DYNAMIC_OBJECT_WOLF, DYNAMIC_OBJECT_NATHAN
+	DYNAMIC_OBJECT_TIGER = 0,
+	DYNAMIC_OBJECT_SPIDER, DYNAMIC_OBJECT_WOLF, 
 
 };
 
@@ -207,11 +207,6 @@ struct Tiger_D : public Dynamic_Object {
 	void define_object();
 };
 
-struct Cow_D : public Dynamic_Object {
-	Cow_D(DYNAMIC_OBJECT_ID _object_id) : Dynamic_Object(_object_id) {}
-	void define_object();
-
-};
 
 struct Spider_D : public Dynamic_Object {
 	Spider_D(DYNAMIC_OBJECT_ID _object_id) : Dynamic_Object(_object_id) {}
@@ -228,8 +223,6 @@ struct Wolf_D : public Dynamic_Object {
 
 struct Dynamic_Geometry_Data {
 	Tiger_D tiger_d{ DYNAMIC_OBJECT_TIGER };
-	Cow_D cow_d_1{ DYNAMIC_OBJECT_COW_1 };
-	Cow_D cow_d_2{ DYNAMIC_OBJECT_COW_2 };
 	Spider_D spider_d{ DYNAMIC_OBJECT_SPIDER };
 	Wolf_D wolf_d{ DYNAMIC_OBJECT_WOLF };
 };
