@@ -96,16 +96,18 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 		cam_proj.params.pers.fovy = 30.f * TO_RADIAN;
 
 		ViewMatrix = glm::lookAt(
-			glm::vec3(200.f, 30.f, 150.f),   // ← (220·160 범위 안)
+			glm::vec3(200.f, 30.f, 50.f),   // ← (220·160 범위 안)
 			glm::vec3(125.f, 80.f, 25.f),   // 중앙 로비
 			glm::vec3(0.f, 0.f, 1.f));
 		extract_axes(*this);
+		update_axis_mm(*this);
 
 		ProjectionMatrix = glm::perspective(cam_proj.params.pers.fovy,
 			cam_proj.params.pers.aspect,
 			cam_proj.params.pers.n,
 			cam_proj.params.pers.f);
 		view_port = { 0.f, (float)win_height - 240.f, 240.f, 240.f };
+		rebuild_cam_axes_and_mm(*this, 100.f);   // 초기 1회
 		break;
 	}
 					  /*------------------------------------ CCTV B ------------------*/
@@ -114,16 +116,18 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 		cam_proj.params.pers.fovy = 32.f * TO_RADIAN;
 
 		ViewMatrix = glm::lookAt(
-			glm::vec3(200.f, 140.f, 150.f),   // ← 실내
+			glm::vec3(200.f, 140.f, 50.f),   // ← 실내
 			glm::vec3(125.f, 80.f, 25.f),
 			glm::vec3(0.f, 0.f, 1.f));
 		extract_axes(*this);
+		update_axis_mm(*this);
 
 		ProjectionMatrix = glm::perspective(cam_proj.params.pers.fovy,
 			cam_proj.params.pers.aspect,
 			cam_proj.params.pers.n,
 			cam_proj.params.pers.f);
 		view_port = { 0.f, (float)win_height - 480.f, 240.f, 240.f };
+		rebuild_cam_axes_and_mm(*this, 100.f);   // 초기 1회
 		break;
 	}
 					  /*------------------------------------ CCTV C ------------------*/
@@ -132,16 +136,18 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 		cam_proj.params.pers.fovy = 28.f * TO_RADIAN;
 
 		ViewMatrix = glm::lookAt(
-			glm::vec3(50.f, 140.f, 155.f),   // ← 기존 1250 → 140 로 수정
+			glm::vec3(50.f, 140.f, 50.f),   // ← 기존 1250 → 140 로 수정
 			glm::vec3(125.f, 80.f, 25.f),
 			glm::vec3(0.f, 0.f, 1.f));
 		extract_axes(*this);
+		update_axis_mm(*this);
 
 		ProjectionMatrix = glm::perspective(cam_proj.params.pers.fovy,
 			cam_proj.params.pers.aspect,
 			cam_proj.params.pers.n,
 			cam_proj.params.pers.f);
 		view_port = { 0.f, (float)win_height - 720.f, 240.f, 240.f };
+		rebuild_cam_axes_and_mm(*this, 100.f);   // 초기 1회
 		break;
 	}
 case CAMERA_CCTV_D_REMOTE: {

@@ -445,7 +445,7 @@ void greetings(char* program_name, char messages[][256], int n_message_lines) {
 	initialize_glew();
 }
 
-#define N_MESSAGE_LINES 5
+#define N_MESSAGE_LINES 6
 void main(int argc, char* argv[]) {
 	char program_name[256] = "Sogang CSE4170/AIE4120 Our_House_GLSL_V_0.55";
 	char messages[N_MESSAGE_LINES][256] = {
@@ -453,7 +453,9 @@ void main(int argc, char* argv[]) {
 		"[CCTV-D] FOV 조정 :  V/B (CCTV_D 전용 FOV 조절)",
 		"[MAIN/CCTV-D] 회전: A/D (좌우 둘러보기),W/S (위/아래 보기),Q/E (좌/우 기울이기)",
 		"[MAIN/CCTV-D] 줌          : Z/X (메인·CCTV_D 공통)",
-		"[MAIN/CCTV-D] 카메라 전환 : 0 (MAIN <-> CCTV_D),  축 표시 토글: Y"
+		"[MAIN/CCTV-D] 카메라 전환 : 0 (MAIN <-> CCTV_D)",
+        "[MAIN/CCTVS] 카메라 전환 :축 표시 토글: Y",
+
 	};
 
 	glutInit(&argc, argv);

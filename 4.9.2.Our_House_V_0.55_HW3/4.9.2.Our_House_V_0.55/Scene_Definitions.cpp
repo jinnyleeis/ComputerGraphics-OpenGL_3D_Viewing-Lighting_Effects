@@ -408,6 +408,9 @@ void Scene::draw_world() {
 		// 1 키로 토글
 		draw_axis_with_model(camera_data.cam_main);
 		draw_axis_with_model(camera_data.cam_cctv_d);
+		draw_axis_with_model(camera_data.cam_cctv_a);
+		draw_axis_with_model(camera_data.cam_cctv_b);
+		draw_axis_with_model(camera_data.cam_cctv_c);
 	}
 	draw_static_world();
 	draw_dynamic_world();
