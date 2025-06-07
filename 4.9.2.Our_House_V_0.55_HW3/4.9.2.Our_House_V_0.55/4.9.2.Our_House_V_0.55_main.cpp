@@ -17,12 +17,8 @@ static Camera_ID   g_active_cam_id = CAMERA_MAIN;
 static Camera_ID g_cur_cam_id = CAMERA_MAIN;
 static Camera_ID g_prev_cam_id = CAMERA_MAIN;   // 최초엔 동일
 
-enum CamFrameMode { FRM_NONE = 0, FRM_MAIN_ONLY, FRM_CCTV_ONLY, FRM_ALL };
-static CamFrameMode g_frame_mode = FRM_ALL;   // 시작은 ‘주카메라만’
-
 static void debug_axis_mm(const Camera& cam, const char* tag)
 {
-	// 1회만 찍고 싶으면 static bool once = true; 조건으로 감싸도 됨
 	fprintf(stderr,
 		"[%s] POS=(%.1f, %.1f, %.1f)  | scale ≈ %.1f\n",
 		tag,
@@ -34,7 +30,7 @@ static void debug_axis_mm(const Camera& cam, const char* tag)
 
 inline void update_axis_mm(Camera& cam)
 {
-	constexpr float AXIS_LEN = CAM_AXIS_LENGTH;     // Scene_Definitions.cpp에 이미 존재
+	constexpr float AXIS_LEN = CAM_AXIS_LENGTH;     
 	glm::mat4 M_camWorld = glm::inverse(cam.ViewMatrix);
 	cam.ModelMatrix_axis = M_camWorld *
 		glm::scale(glm::mat4(1.0f), glm::vec3(AXIS_LEN));
@@ -48,9 +44,7 @@ inline bool is_walkable(float x, float y)
 }
 
 // ------------------------------------------------------------
-// Updated move_wolf(...) with enhanced debug printing
-// so you can manually steer the wolf and see exactly which grid cell
-// (and world‐space cell corner) you're on, as well as whether it's a '0' (walk) or '1' (wall).
+// (and world‐space cell corner on, as well as whether it's a '0' (walk) or '1' (wall).
 // ------------------------------------------------------------
 void move_wolf(float dx, float dy)
 {
@@ -183,7 +177,6 @@ void display(void) {
 			static_cast<Shader_Simple*>(
 					&scene.shader_list[shader_ID_mapper[SHADER_SIMPLE]]
 				  .get()), scene.ViewMatrix, scene.ProjectionMatrix);
-		//scene.draw_cam_frame(camera->get());
 
 		scene.draw_world();
 	}
@@ -334,13 +327,6 @@ void display(void) {
 		default: break;
 		}
 	
-//Camera& new_main = ACTIVE_CAM();
-//Camera& old_main = scene.camera_data.cam_main;
-
-	//std::swap(new_main.view_port, old_main.view_port);
-//std::swap(new_main.camera_id, old_main.camera_id);
-
-
 
 	/* ← switch 밖 (즉 항상 실행) */
 	static const char* cam_name[8] = {
@@ -355,33 +341,7 @@ void display(void) {
 const float PIXEL2WORLD = 0.5f;
 static int   last_x = -1, last_y = -1;
 
-void passive_motion(int x, int y) {
-	if (last_x < 0) { last_x = x; last_y = y; return; }
-	float dx = (x - last_x) * PIXEL2WORLD;
-	float dy = (last_y - y) * PIXEL2WORLD; // 윈도우 y축 반대
-	last_x = x; last_y = y;
 
-	/* ① 이동 후보 계산 */
-	glm::vec3 cand = scene.g_wolf.pos + glm::vec3(dx, dy, 0.f);
-
-	/* ② 충돌 확인 – 못 지나가면 무시 */
-	if (!is_walkable(cand.x, cand.y)) return;
-
-	/* ③ 반영 */
-//	scene.g_wolf.pos = cand;
-	//if (glm::length(glm::vec2(dx, dy)) > 0.01f)
-	//	scene.g_wolf.heading = atan2f(dy, dx);   // 바라보는 방향 갱신
-}
-
-/*───────────────────────────────*/
-/*  Arrow-key interaction        */
-/*───────────────────────────────*/
-/*───────────────────────────────*/
-/*   Arrow-key interaction       */
-/*───────────────────────────────*/
-/*───────────────────────────────*/
-/*  Arrow-key interaction with English console logs        */
-/*───────────────────────────────*/
 void special(int key, int, int)
 {
 	Camera& cam = ACTIVE_CAM();
@@ -496,9 +456,7 @@ void register_callbacks(void) {
 	glutReshapeFunc(reshape);
 	glutTimerFunc(100, timer_scene, 0);
 	glutSpecialFunc(special);
-	//glutPassiveMotionFunc(passive_motion);
-
-	//	glutCloseFunc(cleanup_OpenGL_stuffs or else); // Do it yourself!!!
+	
 }
 
 void initialize_OpenGL(void) {
