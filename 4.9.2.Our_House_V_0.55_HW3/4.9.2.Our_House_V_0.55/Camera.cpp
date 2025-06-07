@@ -87,7 +87,7 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 
 		ProjectionMatrix = glm::perspective(cam_proj.params.pers.fovy, cam_proj.params.pers.aspect,
 			cam_proj.params.pers.n, cam_proj.params.pers.f);
-		view_port.x = 200; view_port.y = 200; view_port.w = win_width - 200; view_port.h = win_height - 200;
+		view_port.x = 200; view_port.y = 0; view_port.w = win_width - 200; view_port.h = win_height - 200;
 		break;
 
 		/*------------------------------------ CCTV A ------------------*/
@@ -204,7 +204,7 @@ void Orthographic_Camera::define_camera(int win_width, int win_height,
 			glm::vec3(125.f, 80.f, 25.f),
 			glm::vec3(0.f, 0.f, 1.f));
 		extract_axes(*this);
-		view_port = { (float)win_width - 260.f, (float)win_height - 160.f, 260.f, 160.f };
+		view_port = { 550.f,(float)win_height - 190.f,  350.f, 220.f };
 		break;
 	}
 						  /*---------------------------------- (측면도) -------------------------*/
@@ -213,7 +213,7 @@ void Orthographic_Camera::define_camera(int win_width, int win_height,
 			glm::vec3(125.f, 80.f, 25.f),
 			glm::vec3(0.f, 0.f, 1.f));
 		extract_axes(*this);
-		view_port = { (float)win_width - 260.f, (float)win_height - 320.f, 260.f, 160.f };
+		view_port = {800.f,(float)win_height - 190.f,  350.f, 220.f };
 		break;
 	}
 					/*---------------------------------- (상면도) -------------------------*/
@@ -222,7 +222,7 @@ void Orthographic_Camera::define_camera(int win_width, int win_height,
 			glm::vec3(125.f, 80.f, 0.f),
 			glm::vec3(1.f, 0.f, 0.f)); // +x 가 up
 		extract_axes(*this);
-		view_port = { (float)win_width - 260.f, (float)win_height - 480.f, 260.f, 160.f };
+		view_port = { 1000.f,(float)win_height - 160.f,  260.f, 160.f };
 		break;
 	}
 	default:

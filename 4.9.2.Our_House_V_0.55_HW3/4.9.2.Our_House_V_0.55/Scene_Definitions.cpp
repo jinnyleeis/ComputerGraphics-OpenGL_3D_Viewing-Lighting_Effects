@@ -107,9 +107,9 @@ void Scene::update_main_camera_follow_wolf() {
 	glm::mat4 M_cam = M_wolf * M_eye * M_camRot;
 	cam.ViewMatrix = glm::inverse(M_cam);
 
-	rebuild_cam_axes_and_mm(cam, 100.f);  // 메인은 계속 20배
-	printf("[AXIS_MM] pos = (%.1f, %.1f, %.1f)\n",
-		cam.cam_view.pos.x, cam.cam_view.pos.y, cam.cam_view.pos.z);
+	rebuild_cam_axes_and_mm(cam, 100.f);
+	//printf("[AXIS_MM] pos = (%.1f, %.1f, %.1f)\n",
+	//	cam.cam_view.pos.x, cam.cam_view.pos.y, cam.cam_view.pos.z);
 
 }
 
@@ -166,7 +166,6 @@ void Axis_Object::draw_axis_with_model(Shader_Simple* shader_simple,
 	glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix*ScaleMatrix;
 
 	/* DEBUG: MVP 프린트 */
-	// (한 번만 보고 싶으면 static bool once=true 조건으로)
 	// fprintf(stdout, "MVP[3] = (%.2f, %.2f, %.2f, %.2f)\n",
 	//         MVP[3][0], MVP[3][1], MVP[3][2], MVP[3][3]);
 	glUseProgram(shader_simple->h_ShaderProgram);
@@ -185,7 +184,7 @@ void Axis_Object::draw_axis_with_model(Shader_Simple* shader_simple,
 }
 static void debug_axis_mm(const Camera& cam, const char* tag)
 {
-	// 1회만 찍고 싶으면 static bool once = true; 조건으로 감싸도 됨
+	/*
 	fprintf(stderr,
 		"[%s] POS=(%.1f, %.1f, %.1f)  | scale ≈ %.1f\n",
 		tag,
@@ -193,11 +192,12 @@ static void debug_axis_mm(const Camera& cam, const char* tag)
 		cam.ModelMatrix_axis[3][1],
 		cam.ModelMatrix_axis[3][2],
 		glm::length(glm::vec3(cam.ModelMatrix_axis[0])));
+		*/
 }
 
 inline void update_axis_mm(Camera& cam)
 {
-	constexpr float AXIS_LEN = CAM_AXIS_LENGTH;     // Scene_Definitions.cpp에 이미 존재
+	constexpr float AXIS_LEN = CAM_AXIS_LENGTH;    
 	glm::mat4 M_camWorld = glm::inverse(cam.ViewMatrix);
 	cam.ModelMatrix_axis = M_camWorld *
 		glm::scale(glm::mat4(1.0f), glm::vec3(AXIS_LEN));

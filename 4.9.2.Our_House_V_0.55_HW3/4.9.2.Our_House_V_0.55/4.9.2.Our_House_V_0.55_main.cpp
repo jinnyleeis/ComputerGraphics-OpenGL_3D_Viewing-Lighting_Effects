@@ -62,16 +62,16 @@ void move_wolf(float dx, float dy)
 	float cell_world_x = gx * 10.0f;
 	float cell_world_y = gy * 10.0f;
 
-	// Print everything you need to know for manual tweaking:
 	//   - cand.x, cand.y : the precise wolf position in world‐space
 	//   - gx, gy         : the grid indices being checked
 	//   - cell_world_x,y : the bottom‐left corner of that grid cell
 	//   - cell           : '0' or '1'
 	//   - walk vs wall
+	/*
 	printf(
 		"[WOLF] Attempted move to world(%.1f, %.1f) → grid indices (gx=%2d, gy=%2d)\n"
 		"       Cell origin at world(%.1f, %.1f), mask='%c' → %s\n",
-		cand.x,     // world X
+	cand.x,     // world X
 		cand.y,     // world Y
 		gx,         // grid column
 		gy,         // grid row
@@ -80,7 +80,7 @@ void move_wolf(float dx, float dy)
 		cell,        // '0'=walk, '1'=wall
 		(cell == 0) ? "WALKABLE" : "WALL"
 	);
-
+	*/
 	// If it's a wall, ignore the move
 	if (cell == 1)
 		return;
@@ -126,9 +126,9 @@ void rebuild_perspective(Camera& cam) {
 		cam.cam_proj.params.pers.n,
 		cam.cam_proj.params.pers.f
 	);
-	fprintf(stdout, "[DEBUG] rebuild_perspective (fovy : %.1f, asp : %.1f,  near : %.1f, far : (%.1f) view NewPos=(%.1f,%.1f,%.1f)\n",
-		cam.cam_proj.params.pers.fovy, cam.cam_proj.params.pers.aspect, cam.cam_proj.params.pers.n, cam.cam_proj.params.pers.f,
-		cam.cam_view.pos.x, cam.cam_view.pos.y, cam.cam_view.pos.z);
+	//fprintf(stdout, "[DEBUG] rebuild_perspective (fovy : %.1f, asp : %.1f,  near : %.1f, far : (%.1f) view NewPos=(%.1f,%.1f,%.1f)\n",
+	//	cam.cam_proj.params.pers.fovy, cam.cam_proj.params.pers.aspect, cam.cam_proj.params.pers.n, cam.cam_proj.params.pers.f,
+	//	cam.cam_view.pos.x, cam.cam_view.pos.y, cam.cam_view.pos.z);
 	update_axis_mm(cam);
 
 
@@ -229,8 +229,8 @@ void display(void) {
 			scene.update_main_camera_follow_wolf();
 			fprintf(stdout,
 				"[CAM_UPDATE] MAIN cam leftRight=%.2f upDown=%.2f headTilt=%.2f\n",
-				scene.g_orbit.leftRight,
-				scene.g_orbit.upDown,
+			scene.g_orbit.leftRight,
+			scene.g_orbit.upDown,
 				scene.g_orbit.headTilt);
 		}
 		// 3) CCTV-D 카메라용 WSADQE
@@ -259,10 +259,6 @@ void display(void) {
 				: CAMERA_MAIN);
 			break;
 
-		case 'r': if (g_cur_cam_id == CAMERA_MAIN)
-			translate_camera(cam, cam.cam_view.vaxis, MOVE_STEP); break;
-		case 'f': if (g_cur_cam_id == CAMERA_MAIN)
-			translate_camera(cam, -cam.cam_view.vaxis, MOVE_STEP); break;
 			/* --- 줌 (MAIN + CCTV_D) --------------------------------------------- */
 		case 'z':
 			if (cam.cam_proj.projection_type == CAMERA_PROJECTION_PERSPECTIVE) {
@@ -290,13 +286,6 @@ void display(void) {
 			rebuild_perspective(cam);
 		} break;
 				/* --- 카메라 축 토글 (Axis 표시) -------------------------------------- */
-
-				// keyboard() ─ case 't' 수정
-		case '1':
-			scene.show_camframe = !scene.show_camframe;
-			glutPostRedisplay();
-			break;
-
 
 
 		case 'c':
@@ -357,10 +346,6 @@ void display(void) {
 
 	glutPostRedisplay();
 }
-/* 이동 계수 – 화면 픽셀 → 월드 단위 */
-const float PIXEL2WORLD = 0.5f;
-static int   last_x = -1, last_y = -1;
-
 
 void special(int key, int, int)
 {
@@ -460,14 +445,15 @@ void greetings(char* program_name, char messages[][256], int n_message_lines) {
 	initialize_glew();
 }
 
-#define N_MESSAGE_LINES 4
+#define N_MESSAGE_LINES 5
 void main(int argc, char* argv[]) {
 	char program_name[256] = "Sogang CSE4170/AIE4120 Our_House_GLSL_V_0.55";
 	char messages[N_MESSAGE_LINES][256] = {
-		   "  - 이동   : W/S, A/D, R/F",
-		   " - 회전 : ← ↑ ↓ →, Q / E ",
-		   "  - 줌     : Z / X   (CCTV_D : V/B)",
-		   "  - 카메라 : 1~8  | 축토글 T"
+	    "[MAIN] 이동 : ←/↑/↓/→ (늑대(메인 카메라) 이동",
+		"[CCTV-D] FOV 조정 :  V/B (CCTV_D 전용 FOV 조절)",
+		"[MAIN/CCTV-D] 회전: A/D (좌우 둘러보기),W/S (위/아래 보기),Q/E (좌/우 기울이기)",
+		"[MAIN/CCTV-D] 줌          : Z/X (메인·CCTV_D 공통)",
+		"[MAIN/CCTV-D] 카메라 전환 : 0 (MAIN <-> CCTV_D),  축 표시 토글: Y"
 	};
 
 	glutInit(&argc, argv);
