@@ -186,53 +186,64 @@ void display(void) {
 
 	void keyboard(unsigned char key, int x, int y) {
 		static int flag_cull_face = 0, polygon_fill_on = 0, depth_test_on = 0;
+	    float STEP = ROT_STEP;
+
 
 		Camera& cam = ACTIVE_CAM();
 
-		switch (key) {
-		case 27: glutLeaveMainLoop(); break;                  // ESC
-
-			/* ────────── n-축(roll) 회전 : Q / E ────────── */
-		case 'q':            // roll +5°
-			if (g_cur_cam_id == CAMERA_MAIN) {
-				scene.g_orbit.roll += 5.f * TO_RADIAN;
-				scene.update_main_camera_follow_wolf();
-			}
-			else if (cam.camera_id == CAMERA_CCTV_D_REMOTE)
-				rotate_camera(cam, cam.cam_view.naxis, ROT_STEP);
-			break;
-
-		case 'e':            // roll –5°
-			if (g_cur_cam_id == CAMERA_MAIN) {
-				scene.g_orbit.roll -= 5.f * TO_RADIAN;
-				scene.update_main_camera_follow_wolf();
-			}
-			else if (cam.camera_id == CAMERA_CCTV_D_REMOTE)
-				rotate_camera(cam, cam.cam_view.naxis, -ROT_STEP);
-			break;
-
-			/* ────────── 카메라-프레임 토글 : Y ────────── */
-		case 'y': scene.show_camframe = !scene.show_camframe; glutPostRedisplay(); break;
-
-		case 't':   // 소문자 t : **현재(Active) 카메라만** 토글
-		{
-			bool anyOn = false;
-			for (auto& cref : scene.camera_list)
-				anyOn |= cref.get().flag_show_frame;
-
-			// 하나라도 켜져 있으면 → 모두 끔, 전부 꺼져 있으면 → 모두 켬
-			bool newState = !anyOn;
-			for (auto& cref : scene.camera_list)
-				cref.get().flag_show_frame = newState;
-
-			glutPostRedisplay();
-			break;
+		// 1) ESC
+		if (key == 27) {
+			glutLeaveMainLoop();
+			return;
 		}
 
-		case 'd': move_wolf(WOLF_STEP, 0);  break;
-		case 'a':move_wolf(-WOLF_STEP, 0); break;    // 동(+x)
-		case 'w': move_wolf(0, WOLF_STEP); break;   // 북(+y)
-		case 's':move_wolf(0, -WOLF_STEP); break;   // 남(-y)
+		// 2) MAIN 카메라용 WSADQE
+		if (g_cur_cam_id == CAMERA_MAIN) {
+			switch (key) {
+				STEP = 5.f * TO_RADIAN;
+			case 'q': scene.g_orbit.roll += STEP; break;
+			case 'e': scene.g_orbit.roll -= STEP; break;
+			case 'w': scene.g_orbit.pitch -= STEP;            break;
+			case 's': scene.g_orbit.pitch += STEP;            break;
+			case 'a': scene.g_orbit.yaw -= STEP;            break;
+			case 'd': scene.g_orbit.yaw += STEP;            break;
+			default: break;
+			}
+			// clamp & update
+			scene.g_orbit.pitch = glm::clamp(
+				scene.g_orbit.pitch,
+				-glm::half_pi<float>() + 0.05f,
+				glm::half_pi<float>() - 0.05f);
+			scene.update_main_camera_follow_wolf();
+			fprintf(stdout,
+				"[CAM_UPDATE] MAIN camera view matrix updated. roll=%.2f, yaw=%.2f, pitch=%.2f\n",
+				scene.g_orbit.roll, scene.g_orbit.yaw, scene.g_orbit.pitch);
+		}
+		// 3) CCTV-D 카메라용 WSADQE
+		else if (g_cur_cam_id == CAMERA_CCTV_D_REMOTE) {
+			switch (key) {
+			case 'q': rotate_camera(cam, cam.cam_view.naxis, STEP); break;
+			case 'e': rotate_camera(cam, cam.cam_view.naxis, -STEP); break;
+			case 'w': rotate_camera(cam, cam.cam_view.uaxis, STEP); break;
+			case 's': rotate_camera(cam, cam.cam_view.uaxis, -STEP); break;
+			case 'a': rotate_camera(cam, cam.cam_view.vaxis, -STEP); break;
+			case 'd': rotate_camera(cam, cam.cam_view.vaxis, STEP); break;
+			default: break;
+			}
+			fprintf(stdout, "[CAM_UPDATE] CCTV-D camera view matrix updated.\n");
+		}
+
+		// 4) 공통 키 (토글, 줌, 카메라 전환 등)
+		switch (key) {
+		case 'y':
+			scene.show_camframe = !scene.show_camframe;
+			break;
+		case '0':
+			g_prev_cam_id = g_cur_cam_id;
+			g_cur_cam_id = (g_cur_cam_id == CAMERA_MAIN
+				? CAMERA_CCTV_D_REMOTE
+				: CAMERA_MAIN);
+			break;
 
 		case 'r': if (g_cur_cam_id == CAMERA_MAIN)
 			translate_camera(cam, cam.cam_view.vaxis, MOVE_STEP); break;
@@ -319,11 +330,6 @@ void display(void) {
 				fprintf(stdout, "^^^ Depth test disabled.\n");
 			}
 			break;
-		case '0':          // MAIN <-> CCTV-D 토글
-			g_prev_cam_id = g_cur_cam_id;                                // 기록
-			g_cur_cam_id = (g_cur_cam_id == CAMERA_MAIN ?
-				CAMERA_CCTV_D_REMOTE : CAMERA_MAIN);        // 전환
-			break;
 		default: break;
 		}
 	
@@ -347,86 +353,20 @@ void special(int key, int, int)
 	Camera& cam = ACTIVE_CAM();
 
 	/* MAIN camera: accumulate yaw/pitch; CCTV-D: local-axis rotation */
-	if (cam.camera_id == CAMERA_MAIN) {
-		const float STEP = 5.f * TO_RADIAN;
+	if (g_cur_cam_id ==CAMERA_MAIN) {
+
 
 		switch (key) {
-		case GLUT_KEY_LEFT:
-			scene.g_orbit.yaw += STEP;
-			fprintf(stdout,
-				"[CAM_CONTROL] MAIN camera: LEFT arrow → yaw increased (yaw: %.2f, pitch: %.2f)\n",
-				scene.g_orbit.yaw, scene.g_orbit.pitch);
-			break;
-		case GLUT_KEY_RIGHT:
-			scene.g_orbit.yaw -= STEP;
-			fprintf(stdout,
-				"[CAM_CONTROL] MAIN camera: RIGHT arrow → yaw decreased (yaw: %.2f, pitch: %.2f)\n",
-				scene.g_orbit.yaw, scene.g_orbit.pitch);
-			break;
-		case GLUT_KEY_UP:
-			scene.g_orbit.pitch += STEP;
-			fprintf(stdout,
-				"[CAM_CONTROL] MAIN camera: UP arrow → pitch increased (yaw: %.2f, pitch: %.2f)\n",
-				scene.g_orbit.yaw, scene.g_orbit.pitch);
-			break;
-		case GLUT_KEY_DOWN:
-			scene.g_orbit.pitch -= STEP;
-			fprintf(stdout,
-				"[CAM_CONTROL] MAIN camera: DOWN arrow → pitch decreased (yaw: %.2f, pitch: %.2f)\n",
-				scene.g_orbit.yaw, scene.g_orbit.pitch);
-			break;
+		case  GLUT_KEY_RIGHT: move_wolf(WOLF_STEP, 0);  break;
+		case GLUT_KEY_LEFT:move_wolf(-WOLF_STEP, 0); break;    // 동(+x)
+		case GLUT_KEY_UP: move_wolf(0, WOLF_STEP); break;   // 북(+y)
+		case GLUT_KEY_DOWN:move_wolf(0, -WOLF_STEP); break;   // 남(-y)
+
 		default:
 			return;
 		}
 
-		/* clamp pitch */
-		scene.g_orbit.pitch = glm::clamp(
-			scene.g_orbit.pitch,
-			-glm::half_pi<float>() + 0.05f,
-			glm::half_pi<float>() - 0.05f);
-
-		/* update view matrix */
-		scene.update_main_camera_follow_wolf();
-
-		fprintf(stdout,
-			"[CAM_UPDATE] MAIN camera view matrix updated. Camera position: (%.1f, %.1f, %.1f)\n",
-			cam.cam_view.pos.x, cam.cam_view.pos.y, cam.cam_view.pos.z);
 	}
-	else if (cam.camera_id == CAMERA_CCTV_D_REMOTE) {
-		const float STEP = ROT_STEP;
-		switch (key) {
-		case GLUT_KEY_LEFT:
-			rotate_camera(cam, cam.cam_view.vaxis, STEP);
-			fprintf(stdout,
-				"[CAM_CONTROL] CCTV-D camera: LEFT arrow → rotate around V axis (STEP: %.2f)\n",
-				STEP);
-			break;
-		case GLUT_KEY_RIGHT:
-			rotate_camera(cam, cam.cam_view.vaxis, -STEP);
-			fprintf(stdout,
-				"[CAM_CONTROL] CCTV-D camera: RIGHT arrow → rotate around V axis (negative STEP: %.2f)\n",
-				STEP);
-			break;
-		case GLUT_KEY_UP:
-			rotate_camera(cam, cam.cam_view.uaxis, STEP);
-			fprintf(stdout,
-				"[CAM_CONTROL] CCTV-D camera: UP arrow → rotate around U axis (STEP: %.2f)\n",
-				STEP);
-			break;
-		case GLUT_KEY_DOWN:
-			rotate_camera(cam, cam.cam_view.uaxis, -STEP);
-			fprintf(stdout,
-				"[CAM_CONTROL] CCTV-D camera: DOWN arrow → rotate around U axis (negative STEP: %.2f)\n",
-				STEP);
-			break;
-		default:
-			return;
-		}
-
-		fprintf(stdout,
-			"[CAM_UPDATE] CCTV-D camera view matrix updated.\n");
-	}
-
 	glutPostRedisplay();   // redraw immediately
 
 
