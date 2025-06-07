@@ -92,6 +92,7 @@ void Scene::update_main_camera_follow_wolf() {
 		glm::rotate(glm::mat4(1.f), -glm::half_pi<float>(), glm::vec3(1, 0, 0)) *   // 기본 tilt
 		glm::rotate(glm::mat4(1.f), -g_orbit.pitch, glm::vec3(1, 0, 0)) *   // ↑↓  ← 부호 반전!
 		glm::rotate(glm::mat4(1.f), -g_orbit.yaw, glm::vec3(0, 0, 1)) *
+		glm::rotate(glm::mat4(1.f), -g_orbit.roll, glm::vec3(0, 1, 0)) *
 		glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, -1.0f, 1.0f));
 
 
@@ -226,6 +227,9 @@ void Scene::build_static_world() {
 	static_geometry_data.frame.define_object();
 	static_object_ID_mapper[STATIC_OBJECT_BUILDING] = static_objects.size();
 	static_objects.push_back(static_geometry_data.frame);
+
+
+	
 
 	static_geometry_data.bike.define_object();          // ID = BIKE
 	static_object_ID_mapper[STATIC_OBJECT_BIKE] = static_objects.size();

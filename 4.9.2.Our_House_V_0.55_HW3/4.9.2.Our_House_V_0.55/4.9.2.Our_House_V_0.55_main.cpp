@@ -200,8 +200,23 @@ void display(void) {
 		case 27: glutLeaveMainLoop(); break;                  // ESC
 
 			/* ────────── n-축(roll) 회전 : Q / E ────────── */
-		case 'q': if (cam.flag_move) rotate_camera(cam, cam.cam_view.naxis, ROT_STEP);  break;
-		case 'e': if (cam.flag_move) rotate_camera(cam, cam.cam_view.naxis, -ROT_STEP);  break;
+		case 'q':            // roll +5°
+			if (g_cur_cam_id == CAMERA_MAIN) {
+				scene.g_orbit.roll += 5.f * TO_RADIAN;
+				scene.update_main_camera_follow_wolf();
+			}
+			else if (cam.camera_id == CAMERA_CCTV_D_REMOTE)
+				rotate_camera(cam, cam.cam_view.naxis, ROT_STEP);
+			break;
+
+		case 'e':            // roll –5°
+			if (g_cur_cam_id == CAMERA_MAIN) {
+				scene.g_orbit.roll -= 5.f * TO_RADIAN;
+				scene.update_main_camera_follow_wolf();
+			}
+			else if (cam.camera_id == CAMERA_CCTV_D_REMOTE)
+				rotate_camera(cam, cam.cam_view.naxis, -ROT_STEP);
+			break;
 
 			/* ────────── 카메라-프레임 토글 : Y ────────── */
 		case 'y': scene.show_camframe = !scene.show_camframe; glutPostRedisplay(); break;

@@ -260,6 +260,7 @@ struct Scene {
 	struct CamOrbit {
 		float yaw = 0; // ← 초기 시점과 동일
 		float pitch = 0;   //  (음수 = 하향)
+		float roll = 0.f;
 		float dist = 400.f;               // 늑대까지 거리
 	} g_orbit;
 	/* -------------------------------------------------------------------- */
