@@ -201,23 +201,37 @@ void display(void) {
 		if (g_cur_cam_id == CAMERA_MAIN) {
 			switch (key) {
 				STEP = 5.f * TO_RADIAN;
-			case 'q': scene.g_orbit.yaw -= STEP; break;
-			case 'e': scene.g_orbit.yaw += STEP; break;
-			case 'w': scene.g_orbit.pitch += STEP;            break;
-			case 's': scene.g_orbit.pitch -= STEP;            break;
-			case 'a': scene.g_orbit.roll -= STEP;            break;
-			case 'd': scene.g_orbit.roll += STEP;            break;
+			case 'a': scene.g_orbit.leftRight -= STEP; break;  // 왼쪽 둘러보기
+			case 'd': scene.g_orbit.leftRight += STEP; break;  // 오른쪽 둘러보기
+			case 'w': scene.g_orbit.upDown += STEP; break;  // 위로 보기
+			case 's': scene.g_orbit.upDown -= STEP; break;  // 아래로 보기
+			case 'q': scene.g_orbit.headTilt -= STEP; break;  // 왼쪽으로 기울이기
+			case 'e': scene.g_orbit.headTilt += STEP; break;  // 오른쪽으로 기울이기
 			default: break;
 			}
 			// clamp & update
-			scene.g_orbit.pitch = glm::clamp(
-				scene.g_orbit.pitch,
+			scene.g_orbit.upDown = glm::clamp(
+				scene.g_orbit.upDown,
+				-glm::half_pi<float>() * 0.15f + 0.05f,
+				glm::half_pi<float>() - 0.05f);
+
+			scene.g_orbit.leftRight= glm::clamp(
+				scene.g_orbit.leftRight,
 				-glm::half_pi<float>() + 0.05f,
 				glm::half_pi<float>() - 0.05f);
+
+			scene.g_orbit.headTilt = glm::clamp(
+				scene.g_orbit.headTilt,
+				-glm::half_pi<float>() + 0.05f,
+				glm::half_pi<float>() - 0.05f);
+
+
 			scene.update_main_camera_follow_wolf();
 			fprintf(stdout,
-				"[CAM_UPDATE] MAIN camera view matrix updated. roll=%.2f, yaw=%.2f, pitch=%.2f\n",
-				scene.g_orbit.roll, scene.g_orbit.yaw, scene.g_orbit.pitch);
+				"[CAM_UPDATE] MAIN cam leftRight=%.2f upDown=%.2f headTilt=%.2f\n",
+				scene.g_orbit.leftRight,
+				scene.g_orbit.upDown,
+				scene.g_orbit.headTilt);
 		}
 		// 3) CCTV-D 카메라용 WSADQE
 		else if (g_cur_cam_id == CAMERA_CCTV_D_REMOTE) {

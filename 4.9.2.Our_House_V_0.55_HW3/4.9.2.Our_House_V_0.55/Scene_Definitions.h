@@ -258,9 +258,9 @@ struct Scene {
 
 	/*──────────────── 메인 카메라 Orbit ───────*/
 	struct CamOrbit {
-		float yaw = 0; // ← 초기 시점과 동일
-		float pitch = 0;   //  (음수 = 하향)
-		float roll = 0.f;
+		float leftRight = 0.0f;  // A/D: 좌우 돌려보기
+		float upDown = 0.0f;  // W/S: 위/아래 보기
+		float headTilt = 0.0f;  // Q/E: 머리(화면) 기울이기
 		float dist = 400.f;               // 늑대까지 거리
 	} g_orbit;
 	/* -------------------------------------------------------------------- */
