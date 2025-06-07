@@ -96,7 +96,7 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 		cam_proj.params.pers.fovy = 30.f * TO_RADIAN;
 
 		ViewMatrix = glm::lookAt(
-			glm::vec3(200.f, 30.f, 50.f),   // ← (220·160 범위 안)
+			glm::vec3(200.f, 30.f, 40.f),   // ← (220·160 범위 안)
 			glm::vec3(125.f, 80.f, 25.f),   // 중앙 로비
 			glm::vec3(0.f, 0.f, 1.f));
 		extract_axes(*this);
@@ -116,7 +116,7 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 		cam_proj.params.pers.fovy = 32.f * TO_RADIAN;
 
 		ViewMatrix = glm::lookAt(
-			glm::vec3(200.f, 140.f, 50.f),   // ← 실내
+			glm::vec3(200.f, 140.f, 40.f),   // ← 실내
 			glm::vec3(125.f, 80.f, 25.f),
 			glm::vec3(0.f, 0.f, 1.f));
 		extract_axes(*this);
@@ -136,7 +136,7 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 		cam_proj.params.pers.fovy = 28.f * TO_RADIAN;
 
 		ViewMatrix = glm::lookAt(
-			glm::vec3(50.f, 140.f, 50.f),   // ← 기존 1250 → 140 로 수정
+			glm::vec3(50.f, 140.f, 40.f),   // ← 기존 1250 → 140 로 수정
 			glm::vec3(125.f, 80.f, 25.f),
 			glm::vec3(0.f, 0.f, 1.f));
 		extract_axes(*this);
@@ -154,7 +154,7 @@ case CAMERA_CCTV_D_REMOTE: {
     flag_valid = flag_move = true;
     cam_proj.params.pers.fovy = 20.f * TO_RADIAN;
 
-    ViewMatrix = glm::lookAt( glm::vec3(125.f, 90.f, 50.f),
+    ViewMatrix = glm::lookAt( glm::vec3(125.f, 90.f, 40.f),
                               glm::vec3(125.f, 80.f, 30.f),
                               glm::vec3(0.f, 0.f, 1.f) );
     extract_axes(*this);          // u, v, n, pos 채우기
