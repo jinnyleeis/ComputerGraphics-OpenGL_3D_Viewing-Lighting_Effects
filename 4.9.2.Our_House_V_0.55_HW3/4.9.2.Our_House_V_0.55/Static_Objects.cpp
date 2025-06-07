@@ -183,8 +183,8 @@ void Cat::define_object() {
 
 		instances.emplace_back();
 		M = &instances.back().ModelMatrix;
-		*M = glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 104.0f, 2.5f));
-		*M = glm::scale(*M, glm::vec3(10.f));
+		*M = glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 116.0f, 2.5f));
+		*M = glm::scale(*M, glm::vec3(7.0f,7.0f,7.f));
 		*M = glm::rotate(*M, 90.f * TO_RADIAN, glm::vec3(0, 1, 0));
 		*M = glm::rotate(*M, 90.f * TO_RADIAN, glm::vec3(0, 0, 1));
 		mat = &instances.back().material;
