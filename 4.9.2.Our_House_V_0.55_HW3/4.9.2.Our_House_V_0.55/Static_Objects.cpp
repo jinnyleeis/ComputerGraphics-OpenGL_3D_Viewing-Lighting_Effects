@@ -243,7 +243,7 @@ void Wood_Tower :: define_object() {
 
 		instances.emplace_back();
 		M = &instances.back().ModelMatrix;
-		*M = glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 109.0f, 11.0f));
+		*M = glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 109.0f, 13.0f));
 		*M = glm::scale(*M, glm::vec3(1.3f));
 		mat = &instances.back().material;
 		mat->ambient = glm::vec4(0.21f, 0.13f, 0.05f, 1);
