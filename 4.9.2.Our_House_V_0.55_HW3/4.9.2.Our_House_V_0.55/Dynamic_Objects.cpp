@@ -230,12 +230,13 @@ void Icosahedron_D::define_object() {
 	object_frames.emplace_back();          // 프레임 하나면 끝
 	
 	Static_Object& frm = object_frames.back();
-	frm.filename[0] = '\0';
-	frm.n_fields = 3;                // 위치만
+	/* (1) 메타데이터 설정 */
+	frm.filename[0] = '\0';   // ★ 파일 없음
+	frm.n_fields = 3;
 	frm.front_face_mode = GL_CCW;
-	frm.object_id = STATIC_OBJECT_BUILDING; // 아무거나; 의미 없음
+	frm.object_id = STATIC_OBJECT_BUILDING;
 
-	/* 20*3 정점 → 배열 생성 */
+	/* (2) 버텍스 배열 생성 */
 	std::vector<float> verts;
 	verts.reserve(20 * 3 * 3);
 	for (int f = 0; f < 20; ++f)
@@ -247,11 +248,12 @@ void Icosahedron_D::define_object() {
 	frm.vertices = (float*)malloc(verts.size() * sizeof(float));
 	memcpy(frm.vertices, verts.data(), verts.size() * sizeof(float));
 
+	/* (3) GPU 전송 – read_geometry()는 건너뜀 */
 	frm.prepare_geom_of_static_object();
 
-	/* ---- (2) 인스턴스&재질 ---- */
+	/* (4) 인스턴스 & 재질 */
 	frm.instances.emplace_back();
-	frm.instances[0].ModelMatrix = glm::mat4(1.f);          // 매 프레임에 덮어씀
+	frm.instances[0].ModelMatrix = glm::mat4(1.f);
 	auto& mat = frm.instances[0].material;
 	mat.diffuse = glm::vec4(0.0, 0.7, 1.0, 1.0);
 	mat.ambient = mat.specular = glm::vec4(0);

@@ -23,13 +23,21 @@ void Static_Object::read_geometry(int bytes_per_primitive) {
 }
 
 void Static_Object::prepare_geom_of_static_object() {
-	int i, n_bytes_per_vertex, n_bytes_per_triangle;
-	char filename[512];
+	int n_bytes_per_vertex, n_bytes_per_triangle;
 
 	n_bytes_per_vertex = n_fields * sizeof(float); // 3 for vertex, 3 for normal, and 2 for texcoord
 	n_bytes_per_triangle = 3 * n_bytes_per_vertex;
 
-	read_geometry(n_bytes_per_triangle);
+	/* ── (A) geometry 로드 여부 결정 ───────────────────────── */
+	if (vertices == nullptr) {            // 아직 버텍스가 없는 경우
+		if (this->filename[0] == '\0') {  // ←  멤버 변수를 정확히 참조
+			fprintf(stderr,
+				"[Static_Object] ERROR: no geometry source (filename & vertices both empty)\n");
+			exit(EXIT_FAILURE);
+		}
+		/* 파일이름이 있으면 기존 방식대로 읽어 옴 */
+		read_geometry(n_bytes_per_triangle);
+	}
 
 	// Initialize vertex buffer object.
 	glGenBuffers(1, &VBO);

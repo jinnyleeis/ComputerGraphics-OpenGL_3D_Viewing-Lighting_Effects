@@ -110,7 +110,14 @@ struct Static_Object { // an object that does not move
 	std::vector<Instance> instances;
 	bool flag_valid;
 
-	Static_Object() {}
+	Static_Object() {
+		filename[0] = '\0';
+		vertices = nullptr;   // ¡Ú
+		n_fields = 0;         // ¡Ú
+		n_triangles = 0;         // ¡Ú
+		VBO = VAO = 0;
+		flag_valid = false;
+	}
 	Static_Object(STATIC_OBJECT_ID _object_id) : object_id(_object_id) {
 		instances.clear();
 	}
