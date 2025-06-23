@@ -264,156 +264,117 @@ void Icosahedron_D::define_object() {
 
 
 
+/* ============================================================
+   Dynamic_Object::draw_object
+   ============================================================ */
+void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
+	glm::mat4& ProjectionMatrix,
+	SHADER_ID  shader_kind,
+	std::vector<std::reference_wrapper<Shader>>& shader_list,
+	int time_stamp)
+{
+	/* ---------- (A) 프레임 & 공통 데이터 ---------- */
+	const int cur_idx = time_stamp % object_frames.size();
+	Static_Object& frm = object_frames[cur_idx];
 
-void Dynamic_Object::draw_object(glm::mat4& ViewMatrix, glm::mat4& ProjectionMatrix, SHADER_ID shader_kind,
-	std::vector<std::reference_wrapper<Shader>>& shader_list, int time_stamp) {
-	int cur_object_index = time_stamp % object_frames.size();
-	Static_Object& cur_object = object_frames[cur_object_index];
-	glFrontFace(cur_object.front_face_mode);
+	glFrontFace(frm.front_face_mode);
 
-	float t = 0; float u = 0; float s = 0;
-
-	/* ② 실시간 시간(ms) 을 받아 경로 위치 계산 */
 	const unsigned int t_ms = glutGet(GLUT_ELAPSED_TIME);
+	glm::mat4 ModelMatrix(1.0f);
 
-
-	float rotation_angle = 0.0f;
-	glm::mat4 ModelMatrix = glm::mat4(1.0f);
+	/* ---------- (B) 오브젝트별 ModelMatrix 계산 --- */
 	switch (object_id) {
-	case DYNAMIC_OBJECT_TIGER:
-	{
-		glm::vec3 dir;
-		glm::vec3 pos = path_pos_dir(t_ms, TIGER_PATH, N_TIGER_SEG, &dir);
-
-		const float heading = atan2f(dir.y, dir.x);
-		ModelMatrix = glm::translate(glm::mat4(1.f), pos);
-		ModelMatrix = glm::rotate(ModelMatrix,
-			heading + glm::half_pi<float>(),
-			glm::vec3(0, 0, 1));
+	case DYNAMIC_OBJECT_TIGER: {
+		glm::vec3 dir, pos = path_pos_dir(t_ms, TIGER_PATH, N_TIGER_SEG, &dir);
+		float heading = atan2f(dir.y, dir.x);
+		ModelMatrix = glm::translate(glm::mat4(1.f), pos) *
+			glm::rotate(glm::mat4(1.f),
+				heading + glm::half_pi<float>(),
+				glm::vec3(0, 0, 1));
 		break;
-
 	}
-
 	case DYNAMIC_OBJECT_SPIDER: {
-		// 1) 경로 상 위치와 진행 방향(dir) 계산
-		glm::vec3 dir;
-		glm::vec3 pos = path_pos_dir(t_ms, SPIDER_PATH, N_SPIDER_SEG, &dir);
-		// dir = normalize(seg.to - seg.from)
-
-		// 2) heading: XY 평면 상의 진행 각도 (Z 축 기준 회전)
-		float heading = atan2f(dir.y, dir.x); // -pi .. +pi 사이 값
-
-		// 3) “바퀴 굴러가는” 회전 각도 계산
-		//    여기서는 t_ms 에 비례하는 상수 속도를 주되, 부드럽게 보이도록 적당한 계수를 곱합니다.
-		//    예: 𝜃 = (t_ms * 0.005) 라디안 (속도 계수는 필요에 따라 조절)
-		float speed_factor = 0.005f; // ← 이 값을 바꾸면 굴러가는 속도 조절 가능
-		float wheelRotation = t_ms * speed_factor; // time-based roll angle
-
-		// 4) Translate -> Rotate_Z(heading) -> Rotate_X(wheelRotation) 순으로 ModelMatrix 구성
-		//    - 로컬 X축(1,0,0)을 기준으로 “굴러가는” 회전을 추가한다.
-		glm::mat4 T = glm::translate(glm::mat4(1.0f), pos);
-		glm::mat4 R_heading = glm::rotate(glm::mat4(1.0f), heading + glm::half_pi<float>(), glm::vec3(0, 0, 1));
-		glm::mat4 R_roll = glm::rotate(glm::mat4(1.0f), wheelRotation, glm::vec3(1, 0, 0));
-
-		// 최종 ModelMatrix: (위치 이동) * (방향 향하게) * (굴러가는 회전)
-		ModelMatrix = T * R_heading * R_roll;
+		glm::vec3 dir, pos = path_pos_dir(t_ms, SPIDER_PATH, N_SPIDER_SEG, &dir);
+		float heading = atan2f(dir.y, dir.x);
+		float roll = t_ms * 0.005f;               // 바퀴 회전
+		ModelMatrix = glm::translate(glm::mat4(1.f), pos) *
+			glm::rotate(glm::mat4(1.f),
+				heading + glm::half_pi<float>(),
+				glm::vec3(0, 0, 1)) *
+			glm::rotate(glm::mat4(1.f), roll, glm::vec3(1, 0, 0));
 		break;
 	}
-
 	case DYNAMIC_OBJECT_WOLF: {
-		glm::mat4 T = glm::translate(glm::mat4(1.f), scene.g_wolf.pos);
-		glm::mat4 R = glm::rotate(glm::mat4(1.f), scene.g_wolf.heading, glm::vec3(0, 0, 1));
-		ModelMatrix = T * R;           // ← 이동·방향 모두 g_wolf 로부터
+		ModelMatrix = glm::translate(glm::mat4(1.f), scene.g_wolf.pos) *
+			glm::rotate(glm::mat4(1.f),
+				scene.g_wolf.heading,
+				glm::vec3(0, 0, 1));
 		break;
 	}
+	case DYNAMIC_OBJECT_ICOSAHEDRON: {
+		static float theta = 0.0f;
+		theta += 0.5f * TO_RADIAN;
 
-	case DYNAMIC_OBJECT_ICOSAHEDRON: {            // ★ NEW ★
-		/* ① 회전 각 누적 */
-		static float g_ico_angle = 0.0f;
-		g_ico_angle += 0.5f * TO_RADIAN;          // 속도 조절 가능
-
-		/* ② 변환 행렬 */
 		const glm::vec3 POS = { 125.f, 80.f, 60.f };
 		const float     SCALE = 25.f;
-		glm::mat4  S = glm::scale(glm::mat4(1.f), glm::vec3(SCALE));
-		glm::mat4  R1 = glm::rotate(glm::mat4(1.f), g_ico_angle, glm::vec3(0, 1, 0));
-		glm::mat4  R2 = glm::rotate(glm::mat4(1.f), g_ico_angle * 0.7f, glm::vec3(1, 0, 1));
-		glm::mat4  T = glm::translate(glm::mat4(1.f), POS);
-		ModelMatrix = T * R1 * R2 * S;
 
+		ModelMatrix =
+			glm::translate(glm::mat4(1.f), POS) *
+			glm::rotate(glm::mat4(1.f), theta, glm::vec3(0, 1, 0)) *
+			glm::rotate(glm::mat4(1.f), theta * 0.7f, glm::vec3(1, 0, 1)) *
+			glm::scale(glm::mat4(1.f), glm::vec3(SCALE));
+		break;
+	}
+	}
 
-		/* ---- (B) 20-면체일 때만 투명/불투명 두 가지 경로 ---- */
-		const bool isICO = (object_id == DYNAMIC_OBJECT_ICOSAHEDRON);
-		const bool doBlend = (isICO && scene.g_flag_ico_blend);
+	/* ---------- (C) 렌더링 루틴 ---------- */
+	Shader_Simple* sh =
+		static_cast<Shader_Simple*>(&shader_list[shader_ID_mapper[shader_kind]].get());
 
-		if (doBlend) {
-			/* ① GL 상태 설정 ---------------------------------- */
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			glDepthMask(GL_FALSE);               // 깊이 버퍼 쓰기 off
-			glEnable(GL_CULL_FACE);
+	const bool doBlend =
+		(object_id == DYNAMIC_OBJECT_ICOSAHEDRON) && scene.g_flag_ico_blend;
 
-			/* ② 두 번 그리기 : BACK ➜ FRONT ------------------- */
-			GLenum passes[2] = { GL_BACK, GL_FRONT };
-			for (int p = 0; p < 2; ++p) {
-				glCullFace(passes[p]);
+	auto drawPass = [&](GLenum cullFace, int flagBlend, float alpha)
+		{
+			glCullFace(cullFace);
 
-				for (int i = 0; i < cur_object.instances.size(); ++i) {
-					glm::mat4 MVP = ProjectionMatrix * ViewMatrix *
-						ModelMatrix *
-						cur_object.instances[i].ModelMatrix;
+			for (size_t i = 0; i < frm.instances.size(); ++i) {
+				glm::mat4 MVP = ProjectionMatrix * ViewMatrix *
+					ModelMatrix * frm.instances[i].ModelMatrix;
 
-					Shader_Simple* sh =
-						static_cast<Shader_Simple*>(&shader_list[shader_ID_mapper[shader_kind]].get());
+				glUseProgram(sh->h_ShaderProgram);
+				glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
+				glUniform3fv(sh->loc_primitive_color, 1, &frm.instances[i].material.diffuse[0]);
+				glUniform1i(sh->loc_u_flag_blending, flagBlend);
+				glUniform1f(sh->loc_u_fragment_alpha, alpha);
 
-					glUseProgram(sh->h_ShaderProgram);
-					glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
-					glUniform3fv(sh->loc_primitive_color, 1,
-						&cur_object.instances[i].material.diffuse[0]);
-					glUniform1i(sh->loc_u_flag_blending, 0);
-					glUniform1f(sh->loc_u_fragment_alpha, 1.0f);
-
-					glBindVertexArray(cur_object.VAO);
-					glDrawArrays(GL_TRIANGLES, 0, 3 * cur_object.n_triangles);
-				}
+				glBindVertexArray(frm.VAO);
+				glDrawArrays(GL_TRIANGLES, 0, 3 * frm.n_triangles);
 			}
+		};
 
-			Shader_Simple* sh =
-				static_cast<Shader_Simple*>(&shader_list[shader_ID_mapper[shader_kind]].get());
+	if (doBlend) {
+		/* --- 투명 20-면체: BACK → FRONT 두 번 그리기 --- */
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glDepthMask(GL_FALSE);
+		glEnable(GL_CULL_FACE);
 
-			/* ③ 상태 원복 ------------------------------------- */
-			glBindVertexArray(0);
-			glUseProgram(sh->h_ShaderProgram);      // 다시 바인딩
-			glUniform1i(sh->loc_u_flag_blending, 0);
-			glUseProgram(0);
-			glDisable(GL_CULL_FACE);
-			glDepthMask(GL_TRUE);
-			glDisable(GL_BLEND);
+		drawPass(GL_BACK, 1, scene.g_ico_alpha);   // 뒤면
+		drawPass(GL_FRONT, 1, scene.g_ico_alpha);   // 앞면
 
-		}
-
-
+		/* 상태 원복 */
+		glDisable(GL_CULL_FACE);
+		glDepthMask(GL_TRUE);
+		glDisable(GL_BLEND);
+	}
+	else {
+		/* --- 일반 불투명 패스 --- */
+		glDisable(GL_CULL_FACE);
+		drawPass(GL_BACK, 0, 1.0f);
 	}
 
-								   for (int i = 0; i < cur_object.instances.size(); i++) {
-									   glm::mat4 ModelViewProjectionMatrix = ProjectionMatrix * ViewMatrix * ModelMatrix * cur_object.instances[i].ModelMatrix;
-									   switch (shader_kind) {
-									   case SHADER_SIMPLE:
-										   Shader_Simple* shader_simple_ptr = static_cast<Shader_Simple*>(&shader_list[shader_ID_mapper[shader_kind]].get());
-										   glUseProgram(shader_simple_ptr->h_ShaderProgram);
-										   glUniformMatrix4fv(shader_simple_ptr->loc_ModelViewProjectionMatrix, 1, GL_FALSE,
-											   &ModelViewProjectionMatrix[0][0]);
-										   glUniform3f(shader_simple_ptr->loc_primitive_color, cur_object.instances[i].material.diffuse.r,
-											   cur_object.instances[i].material.diffuse.g, cur_object.instances[i].material.diffuse.b);
-										   break;
-									   }
-									   glBindVertexArray(cur_object.VAO);
-									   glDrawArrays(GL_TRIANGLES, 0, 3 * cur_object.n_triangles);
-									   glBindVertexArray(0);
-									   glUseProgram(0);
-								   }
-
-								   break;
-
-	}
+	/* 공통 마무리 */
+	glBindVertexArray(0);
+	glUseProgram(0);
 }

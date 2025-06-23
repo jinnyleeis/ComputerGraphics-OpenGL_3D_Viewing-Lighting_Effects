@@ -4,6 +4,7 @@
 #include "Camera.h"   
 
 Scene scene;
+
 std::vector<Scene::WallRect> Scene::g_wall_rects;
 unsigned int static_object_ID_mapper[N_MAX_STATIC_OBJECTS];
 unsigned int dynamic_object_ID_mapper[N_MAX_DYNAMIC_OBJECTS];

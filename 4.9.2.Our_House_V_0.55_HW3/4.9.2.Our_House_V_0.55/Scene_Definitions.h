@@ -269,9 +269,9 @@ struct Scene {
 	bool show_axes = false;
 	bool show_camframe = false;   // (신규) 카메라 프레임 RGB
 
-	bool   g_flag_ico_blend; // ‘6' 토글 여부를 나타냄 
-	float  g_ico_alpha; // 0.0~1.0 (‘+’,‘-’)
-	float  g_ico_angle; //  회전 누적각
+	bool   g_flag_ico_blend = false; // ‘6' 토글 여부를 나타냄 
+	float  g_ico_alpha = 0.5f; // 0.0~1.0 (‘+’,‘-’)
+	float  g_ico_angle = 0.0f; //  회전 누적각
 
 
 	/* ── Mouse-driven wolf -------------------------------------------------- */
