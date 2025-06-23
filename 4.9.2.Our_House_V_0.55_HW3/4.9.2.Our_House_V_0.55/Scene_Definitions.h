@@ -34,6 +34,7 @@ enum STATIC_OBJECT_ID {
 	STATIC_OBJECT_BIKE, STATIC_OBJECT_CAT, 
 	STATIC_OBJECT_IRONMAN, STATIC_OBJECT_DRAGON, 
 	STATIC_OBJECT_WOOD_TOWER,
+	STATIC_OBJECT_LIGHT,
 };
 
 enum DYNAMIC_OBJECT_ID {
@@ -175,6 +176,12 @@ struct Wood_Tower : public Static_Object {
 };
 
 
+struct Light : public Static_Object {
+	Light(STATIC_OBJECT_ID _object_id) : Static_Object(_object_id) {}
+	void define_object();
+};
+
+
 
 struct Static_Geometry_Data {
 	Building building{ STATIC_OBJECT_BUILDING };
@@ -186,6 +193,7 @@ struct Static_Geometry_Data {
 	Ironman ironman{ STATIC_OBJECT_IRONMAN };
 	Dragon dragon{ STATIC_OBJECT_DRAGON };
 	Wood_Tower wood_tower{ STATIC_OBJECT_WOOD_TOWER };
+	Light light{ STATIC_OBJECT_LIGHT };
 	
 
 };

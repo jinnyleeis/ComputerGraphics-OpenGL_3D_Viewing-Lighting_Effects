@@ -259,6 +259,10 @@ void Scene::build_static_world() {
 	static_geometry_data.wood_tower.define_object();    // ID = WOOD_TOWER
 	static_object_ID_mapper[STATIC_OBJECT_WOOD_TOWER] = static_objects.size();
 	static_objects.push_back(static_geometry_data.wood_tower);
+
+	static_geometry_data.light.define_object();
+	static_object_ID_mapper[STATIC_OBJECT_BUILDING] = static_objects.size();
+	static_objects.push_back(static_geometry_data.light);
 }
 
 void Scene::build_dynamic_world() {

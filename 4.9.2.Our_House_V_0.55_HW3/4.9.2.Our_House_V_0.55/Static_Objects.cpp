@@ -314,6 +314,71 @@ public:
 };
 
 
+void Light::define_object() {
+	glm::mat4* cur_MM;
+	Material* cur_material;
+	strcpy(filename, "Data/Light_vn.geom");
+	n_fields = 6;
+	front_face_mode = GL_CCW;
+	prepare_geom_of_static_object();
+	flag_valid = true;
+
+	instances.emplace_back();
+	cur_MM = &(instances.back().ModelMatrix);
+	*cur_MM = glm::translate(glm::mat4(1.0f), glm::vec3(120.0f, 100.0f, 49.0f));
+	*cur_MM = glm::rotate(*cur_MM, 90.0f * TO_RADIAN, glm::vec3(1.0f, 0.0f, 0.0f));
+	cur_material = &(instances.back().material);
+	cur_material->emission = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	cur_material->ambient = glm::vec4(0.24725f, 0.1995f, 0.0745f, 1.0f);
+	cur_material->diffuse = glm::vec4(0.75164f, 0.60648f, 0.22648f, 1.0f);
+	cur_material->specular = glm::vec4(0.628281f, 0.555802f, 0.366065f, 1.0f);
+	cur_material->exponent = 128.0f * 0.4f;
+
+	instances.emplace_back();
+	cur_MM = &(instances.back().ModelMatrix);
+	*cur_MM = glm::translate(glm::mat4(1.0f), glm::vec3(80.0f, 47.5f, 49.0f));
+	*cur_MM = glm::rotate(*cur_MM, 90.0f * TO_RADIAN, glm::vec3(1.0f, 0.0f, 0.0f));
+	cur_material = &(instances.back().material);
+	cur_material->emission = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	cur_material->ambient = glm::vec4(0.24725f, 0.1995f, 0.0745f, 1.0f);
+	cur_material->diffuse = glm::vec4(0.75164f, 0.60648f, 0.22648f, 1.0f);
+	cur_material->specular = glm::vec4(0.628281f, 0.555802f, 0.366065f, 1.0f);
+	cur_material->exponent = 128.0f * 0.4f;
+
+	instances.emplace_back();
+	cur_MM = &(instances.back().ModelMatrix);
+	*cur_MM = glm::translate(glm::mat4(1.0f), glm::vec3(40.0f, 130.0f, 49.0f));
+	*cur_MM = glm::rotate(*cur_MM, 90.0f * TO_RADIAN, glm::vec3(1.0f, 0.0f, 0.0f));
+	cur_material = &(instances.back().material);
+	cur_material->emission = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	cur_material->ambient = glm::vec4(0.24725f, 0.1995f, 0.0745f, 1.0f);
+	cur_material->diffuse = glm::vec4(0.75164f, 0.60648f, 0.22648f, 1.0f);
+	cur_material->specular = glm::vec4(0.628281f, 0.555802f, 0.366065f, 1.0f);
+	cur_material->exponent = 128.0f * 0.4f;
+
+	instances.emplace_back();
+	cur_MM = &(instances.back().ModelMatrix);
+	*cur_MM = glm::translate(glm::mat4(1.0f), glm::vec3(190.0f, 60.0f, 49.0f));
+	*cur_MM = glm::rotate(*cur_MM, 90.0f * TO_RADIAN, glm::vec3(1.0f, 0.0f, 0.0f));
+	cur_material = &(instances.back().material);
+	cur_material->emission = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	cur_material->ambient = glm::vec4(0.24725f, 0.1995f, 0.0745f, 1.0f);
+	cur_material->diffuse = glm::vec4(0.75164f, 0.60648f, 0.22648f, 1.0f);
+	cur_material->specular = glm::vec4(0.628281f, 0.555802f, 0.366065f, 1.0f);
+	cur_material->exponent = 128.0f * 0.4f;
+
+	instances.emplace_back();
+	cur_MM = &(instances.back().ModelMatrix);
+	*cur_MM = glm::translate(glm::mat4(1.0f), glm::vec3(210.0f, 112.5f, 49.0));
+	*cur_MM = glm::rotate(*cur_MM, 90.0f * TO_RADIAN, glm::vec3(1.0f, 0.0f, 0.0f));
+	cur_material = &(instances.back().material);
+	cur_material->emission = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	cur_material->ambient = glm::vec4(0.24725f, 0.1995f, 0.0745f, 1.0f);
+	cur_material->diffuse = glm::vec4(0.75164f, 0.60648f, 0.22648f, 1.0f);
+	cur_material->specular = glm::vec4(0.628281f, 0.555802f, 0.366065f, 1.0f);
+	cur_material->exponent = 128.0f * 0.4f;
+
+}
 
 
 
