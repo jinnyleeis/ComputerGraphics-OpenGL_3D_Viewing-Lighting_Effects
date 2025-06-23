@@ -195,6 +195,7 @@ static void debug_axis_mm(const Camera& cam, const char* tag)
 		*/
 }
 
+
 inline void update_axis_mm(Camera& cam)
 {
 	constexpr float AXIS_LEN = CAM_AXIS_LENGTH;    
@@ -212,6 +213,8 @@ void Scene::clock(int clock_id)
 	time_stamp = (time_stamp + 1U) % UINT_MAX; // 다른 동적 오브젝트 프레임용
 	update_main_camera_follow_wolf();      // 늑대 추적
 	rebuild_cam_axes_and_mm(camera_data.cam_cctv_d, 100.f);  // ★ 추가
+
+	g_ico_angle += 0.5f * TO_RADIAN;
 
 }
 
@@ -270,6 +273,10 @@ void Scene::build_dynamic_world() {
 	dynamic_geometry_data.wolf_d.define_object();
 	dynamic_object_ID_mapper[DYNAMIC_OBJECT_WOLF] = dynamic_objects.size();
 	dynamic_objects.push_back(dynamic_geometry_data.wolf_d);
+
+	dynamic_geometry_data.icosahedron_d.define_object();
+	dynamic_object_ID_mapper[DYNAMIC_OBJECT_ICOSAHEDRON] = dynamic_objects.size();
+	dynamic_objects.push_back(dynamic_geometry_data.icosahedron_d);
 
 
 

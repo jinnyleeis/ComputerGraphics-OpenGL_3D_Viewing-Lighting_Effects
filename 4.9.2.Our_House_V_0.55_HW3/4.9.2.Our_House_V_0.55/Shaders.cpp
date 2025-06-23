@@ -10,5 +10,7 @@ void Shader_Simple::prepare_shader() {
 
 	loc_ModelViewProjectionMatrix = glGetUniformLocation(h_ShaderProgram, "u_ModelViewProjectionMatrix");
 	loc_primitive_color = glGetUniformLocation(h_ShaderProgram, "u_primitive_color");
+	loc_u_flag_blending = glGetUniformLocation(h_ShaderProgram, "u_flag_blending");
+	loc_u_fragment_alpha = glGetUniformLocation(h_ShaderProgram, "u_fragment_alpha");
 	glUseProgram(0);
 }

@@ -31,12 +31,15 @@ enum STATIC_OBJECT_ID {
 	STATIC_OBJECT_BUILDING = 0, STATIC_OBJECT_TABLE,
 	STATIC_OBJECT_TEAPOT, 
 	STATIC_OBJECT_FRAME, 
-	STATIC_OBJECT_BIKE, STATIC_OBJECT_CAT, STATIC_OBJECT_IRONMAN, STATIC_OBJECT_DRAGON, STATIC_OBJECT_WOOD_TOWER
+	STATIC_OBJECT_BIKE, STATIC_OBJECT_CAT, 
+	STATIC_OBJECT_IRONMAN, STATIC_OBJECT_DRAGON, 
+	STATIC_OBJECT_WOOD_TOWER,
 };
 
 enum DYNAMIC_OBJECT_ID {
 	DYNAMIC_OBJECT_TIGER = 0,
 	DYNAMIC_OBJECT_SPIDER, DYNAMIC_OBJECT_WOLF, 
+	DYNAMIC_OBJECT_ICOSAHEDRON
 
 };
 
@@ -46,6 +49,9 @@ struct Shader {
 	ShaderInfo shader_info[3];
 	GLuint h_ShaderProgram; // handle to shader program
 	GLint loc_ModelViewProjectionMatrix;
+	GLint  loc_u_flag_blending;
+	GLint loc_u_fragment_alpha;
+
 
 	Shader() {
 		h_ShaderProgram = NULL;
@@ -161,6 +167,8 @@ struct Wood_Tower : public Static_Object {
 	void define_object();
 };
 
+
+
 struct Static_Geometry_Data {
 	Building building{ STATIC_OBJECT_BUILDING };
 	Table table{ STATIC_OBJECT_TABLE };
@@ -171,6 +179,7 @@ struct Static_Geometry_Data {
 	Ironman ironman{ STATIC_OBJECT_IRONMAN };
 	Dragon dragon{ STATIC_OBJECT_DRAGON };
 	Wood_Tower wood_tower{ STATIC_OBJECT_WOOD_TOWER };
+	
 
 };
 
@@ -204,13 +213,17 @@ struct Wolf_D : public Dynamic_Object {
 	void define_object();
 };
 
-
+struct Icosahedron_D : public Dynamic_Object {
+	Icosahedron_D(DYNAMIC_OBJECT_ID _object_id) : Dynamic_Object(_object_id) {}
+	void define_object();
+};
 
 
 struct Dynamic_Geometry_Data {
 	Tiger_D tiger_d{ DYNAMIC_OBJECT_TIGER };
 	Spider_D spider_d{ DYNAMIC_OBJECT_SPIDER };
 	Wolf_D wolf_d{ DYNAMIC_OBJECT_WOLF };
+	Icosahedron_D icosahedron_d{ DYNAMIC_OBJECT_ICOSAHEDRON };
 };
 
 struct Window {
@@ -248,6 +261,10 @@ struct Scene {
 
 	bool show_axes = false;
 	bool show_camframe = false;   // (신규) 카메라 프레임 RGB
+
+	bool   g_flag_ico_blend; // ‘6' 토글 여부를 나타냄 
+	float  g_ico_alpha; // 0.0~1.0 (‘+’,‘-’)
+	float  g_ico_angle; //  회전 누적각
 
 
 	/* ── Mouse-driven wolf -------------------------------------------------- */

@@ -254,6 +254,56 @@ void Wood_Tower :: define_object() {
 };
 
 
+class Icosahedron : public Static_Object {
+public:
+	Icosahedron(STATIC_OBJECT_ID id) : Static_Object(id) {}
+	void define_object() {
+		/* 1) 정점/인덱스 데이터 */
+		float X = 0.525731f, Z = 0.850651f; // 정규화된 값
+		const GLfloat vdata[12][3] = {
+			{-X,0,Z},{X,0,Z},{-X,0,-Z},{X,0,-Z},
+			{0,Z,X},{0,Z,-X},{0,-Z,X},{0,-Z,-X},
+			{Z,X,0},{-Z,X,0},{Z,-X,0},{-Z,-X,0}
+		};
+		const GLint tindices[20][3] = {
+			{0,4,1},{0,9,4},{9,5,4},{4,5,8},{4,8,1},
+			{8,10,1},{8,3,10},{5,3,8},{5,2,3},{2,7,3},
+			{7,10,3},{7,6,10},{7,11,6},{11,0,6},{0,1,6},
+			{6,1,10},{9,0,11},{9,11,2},{9,2,5},{7,2,11}
+		};
+
+		/* 2) 한 면(삼각형)마다 3-버텍스 push → vertices[] */
+		std::vector<GLfloat> verts;
+		for (int f = 0; f < 20; ++f)
+			for (int k = 0; k < 3; ++k) {
+				int idx = tindices[f][k];
+				verts.insert(verts.end(), { vdata[idx][0],vdata[idx][1],vdata[idx][2] });
+			}
+		n_fields = 3;                  // pos only
+		n_triangles = 20;              // 20 faces
+		front_face_mode = GL_CCW;
+		flag_valid = true;
+
+		/* 3) GPU 전송 */
+		glGenBuffers(1, &VBO);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER,
+			verts.size() * sizeof(GLfloat),
+			verts.data(), GL_STATIC_DRAW);
+
+		glGenVertexArrays(1, &VAO);
+		glBindVertexArray(VAO);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+		glEnableVertexAttribArray(0);
+		glBindVertexArray(0);
+
+
+		/* 2) 인스턴스 한 개 생성 */
+		instances.emplace_back();
+		/* 위치·스케일은 고정, 회전은 매 프레임 별도 갱신 */
+		instances.back().ModelMatrix = glm::mat4(1.f);   // ★ 초기값만 1
+	}
+};
 
 
 

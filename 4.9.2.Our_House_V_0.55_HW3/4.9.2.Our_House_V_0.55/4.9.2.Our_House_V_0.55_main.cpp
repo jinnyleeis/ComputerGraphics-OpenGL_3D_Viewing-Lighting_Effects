@@ -333,6 +333,18 @@ void display(void) {
 				fprintf(stdout, "^^^ Depth test disabled.\n");
 			}
 			break;
+		case '6':
+			scene.g_flag_ico_blend = !scene.g_flag_ico_blend;
+			break;
+		case '+':
+			if (scene.g_flag_ico_blend)
+				scene.g_ico_alpha = glm::min(1.0f, scene.g_ico_alpha + 0.1f);
+			break;
+		case '-':
+			if (scene.g_flag_ico_blend)
+				scene.g_ico_alpha = glm::max(0.1f, scene.g_ico_alpha - 0.1f);
+			break;
+
 		default: break;
 		}
 	

@@ -211,6 +211,58 @@ void Wolf_D::define_object() {
 	}
 }
 
+/* ─────────────────────  20-면체 동적 오브젝트  ───────────────────── */
+void Icosahedron_D::define_object() {
+	/* ---- (1) 기하 생성 ---- */
+	static const float X = .5257311121f, Z = .8506508084f;
+	const GLfloat vdata[12][3] = {
+{-X,0,Z},{X,0,Z},{-X,0,-Z},{X,0,-Z},
+{0,Z,X},{0,Z,-X},{0,-Z,X},{0,-Z,-X},
+{Z,X,0},{-Z,X,0},{Z,-X,0},{-Z,-X,0}
+	};
+	const GLint tindices[20][3] = {
+		{0,4,1},{0,9,4},{9,5,4},{4,5,8},{4,8,1},
+		{8,10,1},{8,3,10},{5,3,8},{5,2,3},{2,7,3},
+		{7,10,3},{7,6,10},{7,11,6},{11,0,6},{0,1,6},
+		{6,1,10},{9,0,11},{9,11,2},{9,2,5},{7,2,11}
+	};
+
+	object_frames.emplace_back();          // 프레임 하나면 끝
+	
+	Static_Object& frm = object_frames.back();
+	frm.filename[0] = '\0';
+	frm.n_fields = 3;                // 위치만
+	frm.front_face_mode = GL_CCW;
+	frm.object_id = STATIC_OBJECT_BUILDING; // 아무거나; 의미 없음
+
+	/* 20*3 정점 → 배열 생성 */
+	std::vector<float> verts;
+	verts.reserve(20 * 3 * 3);
+	for (int f = 0; f < 20; ++f)
+		for (int v = 0; v < 3; ++v)
+			for (int c = 0; c < 3; ++c)
+				verts.push_back(vdata[tindices[f][v]][c]);
+
+	frm.n_triangles = 20;
+	frm.vertices = (float*)malloc(verts.size() * sizeof(float));
+	memcpy(frm.vertices, verts.data(), verts.size() * sizeof(float));
+
+	frm.prepare_geom_of_static_object();
+
+	/* ---- (2) 인스턴스&재질 ---- */
+	frm.instances.emplace_back();
+	frm.instances[0].ModelMatrix = glm::mat4(1.f);          // 매 프레임에 덮어씀
+	auto& mat = frm.instances[0].material;
+	mat.diffuse = glm::vec4(0.0, 0.7, 1.0, 1.0);
+	mat.ambient = mat.specular = glm::vec4(0);
+	flag_valid = true;
+};
+
+
+
+
+
+
 void Dynamic_Object::draw_object(glm::mat4& ViewMatrix, glm::mat4& ProjectionMatrix, SHADER_ID shader_kind,
 	std::vector<std::reference_wrapper<Shader>>& shader_list, int time_stamp) {
 	int cur_object_index = time_stamp % object_frames.size();
@@ -238,7 +290,7 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix, glm::mat4& ProjectionMat
 			glm::vec3(0, 0, 1));
 		break;
 
-		}
+	}
 
 	case DYNAMIC_OBJECT_SPIDER: {
 		// 1) 경로 상 위치와 진행 방향(dir) 계산
@@ -272,26 +324,94 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix, glm::mat4& ProjectionMat
 		ModelMatrix = T * R;           // ← 이동·방향 모두 g_wolf 로부터
 		break;
 	}
-							/* ───── 3. Dynamic_Object::draw_object() – Nathan 분기 추가 ───── */
+
+	case DYNAMIC_OBJECT_ICOSAHEDRON: {            // ★ NEW ★
+		/* ① 회전 각 누적 */
+		static float g_ico_angle = 0.0f;
+		g_ico_angle += 0.5f * TO_RADIAN;          // 속도 조절 가능
+
+		/* ② 변환 행렬 */
+		const glm::vec3 POS = { 125.f, 80.f, 60.f };
+		const float     SCALE = 25.f;
+		glm::mat4  S = glm::scale(glm::mat4(1.f), glm::vec3(SCALE));
+		glm::mat4  R1 = glm::rotate(glm::mat4(1.f), g_ico_angle, glm::vec3(0, 1, 0));
+		glm::mat4  R2 = glm::rotate(glm::mat4(1.f), g_ico_angle * 0.7f, glm::vec3(1, 0, 1));
+		glm::mat4  T = glm::translate(glm::mat4(1.f), POS);
+		ModelMatrix = T * R1 * R2 * S;
+
+
+		/* ---- (B) 20-면체일 때만 투명/불투명 두 가지 경로 ---- */
+		const bool isICO = (object_id == DYNAMIC_OBJECT_ICOSAHEDRON);
+		const bool doBlend = (isICO && scene.g_flag_ico_blend);
+
+		if (doBlend) {
+			/* ① GL 상태 설정 ---------------------------------- */
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glDepthMask(GL_FALSE);               // 깊이 버퍼 쓰기 off
+			glEnable(GL_CULL_FACE);
+
+			/* ② 두 번 그리기 : BACK ➜ FRONT ------------------- */
+			GLenum passes[2] = { GL_BACK, GL_FRONT };
+			for (int p = 0; p < 2; ++p) {
+				glCullFace(passes[p]);
+
+				for (int i = 0; i < cur_object.instances.size(); ++i) {
+					glm::mat4 MVP = ProjectionMatrix * ViewMatrix *
+						ModelMatrix *
+						cur_object.instances[i].ModelMatrix;
+
+					Shader_Simple* sh =
+						static_cast<Shader_Simple*>(&shader_list[shader_ID_mapper[shader_kind]].get());
+
+					glUseProgram(sh->h_ShaderProgram);
+					glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
+					glUniform3fv(sh->loc_primitive_color, 1,
+						&cur_object.instances[i].material.diffuse[0]);
+					glUniform1i(sh->loc_u_flag_blending, 0);
+					glUniform1f(sh->loc_u_fragment_alpha, 1.0f);
+
+					glBindVertexArray(cur_object.VAO);
+					glDrawArrays(GL_TRIANGLES, 0, 3 * cur_object.n_triangles);
+				}
+			}
+
+			Shader_Simple* sh =
+				static_cast<Shader_Simple*>(&shader_list[shader_ID_mapper[shader_kind]].get());
+
+			/* ③ 상태 원복 ------------------------------------- */
+			glBindVertexArray(0);
+			glUseProgram(sh->h_ShaderProgram);      // 다시 바인딩
+			glUniform1i(sh->loc_u_flag_blending, 0);
+			glUseProgram(0);
+			glDisable(GL_CULL_FACE);
+			glDepthMask(GL_TRUE);
+			glDisable(GL_BLEND);
+
+		}
 
 
 	}
 
-	for (int i = 0; i < cur_object.instances.size(); i++) {
-		glm::mat4 ModelViewProjectionMatrix = ProjectionMatrix * ViewMatrix * ModelMatrix * cur_object.instances[i].ModelMatrix;
-		switch (shader_kind) {
-		case SHADER_SIMPLE:
-			Shader_Simple* shader_simple_ptr = static_cast<Shader_Simple*>(&shader_list[shader_ID_mapper[shader_kind]].get());
-			glUseProgram(shader_simple_ptr->h_ShaderProgram);
-			glUniformMatrix4fv(shader_simple_ptr->loc_ModelViewProjectionMatrix, 1, GL_FALSE,
-				&ModelViewProjectionMatrix[0][0]);
-			glUniform3f(shader_simple_ptr->loc_primitive_color, cur_object.instances[i].material.diffuse.r,
-				cur_object.instances[i].material.diffuse.g, cur_object.instances[i].material.diffuse.b);
-			break;
-		}
-		glBindVertexArray(cur_object.VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3 * cur_object.n_triangles);
-		glBindVertexArray(0);
-		glUseProgram(0);
+								   for (int i = 0; i < cur_object.instances.size(); i++) {
+									   glm::mat4 ModelViewProjectionMatrix = ProjectionMatrix * ViewMatrix * ModelMatrix * cur_object.instances[i].ModelMatrix;
+									   switch (shader_kind) {
+									   case SHADER_SIMPLE:
+										   Shader_Simple* shader_simple_ptr = static_cast<Shader_Simple*>(&shader_list[shader_ID_mapper[shader_kind]].get());
+										   glUseProgram(shader_simple_ptr->h_ShaderProgram);
+										   glUniformMatrix4fv(shader_simple_ptr->loc_ModelViewProjectionMatrix, 1, GL_FALSE,
+											   &ModelViewProjectionMatrix[0][0]);
+										   glUniform3f(shader_simple_ptr->loc_primitive_color, cur_object.instances[i].material.diffuse.r,
+											   cur_object.instances[i].material.diffuse.g, cur_object.instances[i].material.diffuse.b);
+										   break;
+									   }
+									   glBindVertexArray(cur_object.VAO);
+									   glDrawArrays(GL_TRIANGLES, 0, 3 * cur_object.n_triangles);
+									   glBindVertexArray(0);
+									   glUseProgram(0);
+								   }
+
+								   break;
+
 	}
 }
