@@ -14,3 +14,20 @@ void Shader_Simple::prepare_shader() {
 	loc_u_fragment_alpha = glGetUniformLocation(h_ShaderProgram, "u_fragment_alpha");
 	glUseProgram(0);
 }
+
+/* 파일 맨 아래쪽에 추가 --------------------------------------------- */
+void Shader_Phong_Texture::prepare_shader() {
+	shader_info[0] = { GL_VERTEX_SHADER,   "Shaders/Phong_Tx.vert" };
+	shader_info[1] = { GL_FRAGMENT_SHADER, "Shaders/Phong_Tx.frag" };
+	shader_info[2] = { GL_NONE, nullptr };
+
+	h_ShaderProgram = LoadShaders(shader_info);
+	glUseProgram(h_ShaderProgram);
+
+	loc_ModelViewProjectionMatrix = glGetUniformLocation(h_ShaderProgram, "u_ModelViewProjectionMatrix");
+	loc_ModelViewMatrix = glGetUniformLocation(h_ShaderProgram, "u_ModelViewMatrix");
+	loc_ModelViewMatrixInvTrans = glGetUniformLocation(h_ShaderProgram, "u_ModelViewMatrixInvTrans");
+	loc_texture = glGetUniformLocation(h_ShaderProgram, "u_base_texture");
+
+	glUseProgram(0);
+}

@@ -154,6 +154,9 @@ void Spider_D::define_object() {
 
 		/* 3. �ν��Ͻ�(1��) - ��ȯ & ���� */
 		object_frames[i].instances.emplace_back();
+
+		object_frames[i].tex_id = TEXTURE_ID_SPIDER;   // ← 추가
+
 		cur_MM = &(object_frames[i].instances.back().ModelMatrix);
 		*cur_MM = glm::scale(glm::mat4(1.0f), glm::vec3(7.40f));
 

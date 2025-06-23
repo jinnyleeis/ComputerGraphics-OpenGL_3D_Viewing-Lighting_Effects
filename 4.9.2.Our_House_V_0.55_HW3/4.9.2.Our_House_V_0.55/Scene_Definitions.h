@@ -20,6 +20,9 @@
 #define N_MAX_DYNAMIC_OBJECTS		11
 #define N_MAX_CAMERAS		10
 #define N_MAX_SHADERS		10
+
+#define N_MAX_TEXTURES 16       
+
 static const int W = 23, H = 17;
 
 extern unsigned int static_object_ID_mapper[N_MAX_STATIC_OBJECTS];
@@ -44,6 +47,15 @@ enum DYNAMIC_OBJECT_ID {
 
 };
 
+/* 사용자-지정 텍스처 인덱스 */
+enum USER_TEXTURE_ID {
+	TEXTURE_ID_FLOOR = 0,        // 이미 예제에서 사용
+	TEXTURE_ID_SPIDER = 1,       // 동적 오브젝트
+	TEXTURE_ID_WOOD_TOWER = 2,   // 정적 오브젝트
+	N_USER_TEXTURES
+};
+extern GLuint texture_names[N_MAX_TEXTURES];
+
 enum SHADER_ID { SHADER_SIMPLE = 0, SHADER_PHONG, SHADER_PHONG_TEXUTRE };
 
 struct Shader {
@@ -67,10 +79,20 @@ struct Shader_Simple : Shader {
 	void prepare_shader();
 };
 
+struct Shader_Phong_Texture : Shader {
+	GLint loc_ModelViewProjectionMatrix;
+	GLint loc_ModelViewMatrix;
+	GLint loc_ModelViewMatrixInvTrans;
+	GLint loc_texture;
+
+	void prepare_shader();
+};
+
 struct Shader_Data {
 	Shader_Simple shader_simple;
 	// Shader_Phong shader_phong;
 	// Shader_Phong_Texture Shader_Phong_texture;
+	Shader_Phong_Texture  shader_phong_texture;
 };
 
 struct Material {
@@ -110,6 +132,7 @@ struct Static_Object { // an object that does not move
 
 	std::vector<Instance> instances;
 	bool flag_valid;
+	int  tex_id = -1;            // ← 텍스처 ID (-1 이면 비텍스처)
 
 	Static_Object() {
 		filename[0] = '\0';
@@ -271,6 +294,8 @@ struct Scene {
 	static constexpr int H = 17;   // number of rows
 
 	static const int floor_mask[H][W];
+
+	void set_user_filter(unsigned int id);
 
 
 

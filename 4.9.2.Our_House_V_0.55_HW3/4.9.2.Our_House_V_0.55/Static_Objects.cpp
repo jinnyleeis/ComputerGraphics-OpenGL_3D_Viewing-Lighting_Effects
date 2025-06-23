@@ -1,6 +1,8 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "Scene_Definitions.h"
+#include <glm/gtc/matrix_inverse.hpp>   // 파일 맨 위
+
 
 void Static_Object::read_geometry(int bytes_per_primitive) {
 	FILE* fp;
@@ -250,6 +252,9 @@ void Wood_Tower :: define_object() {
 		prepare_geom_of_static_object();  flag_valid = true;
 
 		instances.emplace_back();
+
+		tex_id = TEXTURE_ID_WOOD_TOWER;
+
 		M = &instances.back().ModelMatrix;
 		*M = glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 109.0f, 13.0f));
 		*M = glm::scale(*M, glm::vec3(1.3f));
@@ -389,25 +394,55 @@ void print_mat4(const char* string, glm::mat4 M) {
 		fprintf(stdout, "*** COL[%d] (%f, %f, %f, %f)\n", i, M[i].x, M[i].y, M[i].z, M[i].w);
 	fprintf(stdout, "**************\n\n");
 }
-void Static_Object::draw_object(glm::mat4& ViewMatrix, glm::mat4& ProjectionMatrix, SHADER_ID shader_kind,
-	std::vector<std::reference_wrapper<Shader>>& shader_list) {
-	glm::mat4 ModelViewProjectionMatrix;
+
+
+void Static_Object::draw_object(glm::mat4& ViewMatrix,
+	glm::mat4& ProjectionMatrix,
+	SHADER_ID shader_kind,
+	std::vector<std::reference_wrapper<Shader>>& shader_list)
+{
 	glFrontFace(front_face_mode);
-	for (int i = 0; i < instances.size(); i++) {
-		ModelViewProjectionMatrix = ProjectionMatrix * ViewMatrix * instances[i].ModelMatrix;
-		switch (shader_kind) {
-		case SHADER_SIMPLE:
-			Shader_Simple* shader_simple_ptr = static_cast<Shader_Simple*>(&shader_list[shader_ID_mapper[shader_kind]].get());
-			glUseProgram(shader_simple_ptr->h_ShaderProgram);
-			glUniformMatrix4fv(shader_simple_ptr->loc_ModelViewProjectionMatrix, 1, GL_FALSE,
-				&ModelViewProjectionMatrix[0][0]);
-			glUniform3f(shader_simple_ptr->loc_primitive_color, instances[i].material.diffuse.r,
-				instances[i].material.diffuse.g, instances[i].material.diffuse.b);
-			break;
+
+	/* 객체에 텍스처가 지정되었으면 무조건 Phong-Texture 셰이더 사용 */
+	bool use_tex = (tex_id >= 0);
+	SHADER_ID eff = use_tex ? SHADER_PHONG_TEXUTRE : shader_kind;
+
+	for (size_t i = 0; i < instances.size(); ++i) {
+		const Instance& inst = instances[i];
+
+		glm::mat4 MV = ViewMatrix * inst.ModelMatrix;
+		glm::mat4 MVP = ProjectionMatrix * MV;
+		glm::mat3 MVN = glm::inverseTranspose(glm::mat3(MV));
+
+		/* ---------------------------------------------------------------- */
+		if (eff == SHADER_SIMPLE) {
+			auto* sh = static_cast<Shader_Simple*>(
+				&shader_list[shader_ID_mapper[SHADER_SIMPLE]].get());
+
+			glUseProgram(sh->h_ShaderProgram);
+			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
+			glUniform3fv(sh->loc_primitive_color, 1, &inst.material.diffuse[0]);
 		}
+		else { // SHADER_PHONG_TEXUTRE
+			auto* sh = static_cast<Shader_Phong_Texture*>(
+				&shader_list[shader_ID_mapper[SHADER_PHONG_TEXUTRE]].get());
+
+			glUseProgram(sh->h_ShaderProgram);
+			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
+			glUniformMatrix4fv(sh->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
+			glUniformMatrix3fv(sh->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
+
+			/* 텍스처 바인딩 */
+			glActiveTexture(GL_TEXTURE0 + tex_id);
+			glBindTexture(GL_TEXTURE_2D, texture_names[tex_id]);
+			glUniform1i(sh->loc_texture, tex_id);
+		}
+		/* ---------------------------------------------------------------- */
+
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3 * n_triangles);
-		glBindVertexArray(0);
-		glUseProgram(0);
 	}
+
+	glBindVertexArray(0);
+	glUseProgram(0);
 }

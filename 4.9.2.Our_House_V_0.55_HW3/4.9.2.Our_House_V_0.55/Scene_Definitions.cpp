@@ -1,7 +1,9 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 
 #include "Scene_Definitions.h"
-#include "Camera.h"   
+#include "Camera.h"  
+#include "Texture_Helper.h"     // 파일 상단 include 목록에 추가
+
 
 Scene scene;
 
@@ -10,6 +12,35 @@ unsigned int static_object_ID_mapper[N_MAX_STATIC_OBJECTS];
 unsigned int dynamic_object_ID_mapper[N_MAX_DYNAMIC_OBJECTS];
 unsigned int camera_ID_mapper[N_MAX_CAMERAS];
 unsigned int shader_ID_mapper[N_MAX_SHADERS];
+
+
+GLuint texture_names[N_MAX_TEXTURES] = { 0 };
+
+static GLenum g_cur_filter = GL_LINEAR;   // 디폴트는 Linear
+
+void Scene::set_user_filter(unsigned int id){
+	/* 사용자 필터링 모드 설정 */
+	GLenum user_filter = GL_LINEAR;  // 디폴트는 Linear
+	if (id == 0) {
+		user_filter = GL_NEAREST;      // 0번은 Nearest
+	} else if (id == 1) {
+		user_filter = GL_LINEAR;       // 1번은 Linear
+	}
+
+	const GLuint pick[] = {
+		texture_names[TEXTURE_ID_SPIDER],
+		texture_names[TEXTURE_ID_WOOD_TOWER]
+	};
+	for (GLuint tex : pick) {
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,user_filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, user_filter);
+	}
+}
+
+
+
+
 
 #define GL_CHECK                                                                             \
     {                                                                                        \
@@ -331,6 +362,13 @@ void Scene::build_shader_list() {
 	shader_data.shader_simple.prepare_shader();
 	shader_ID_mapper[SHADER_SIMPLE] = shader_list.size();
 	shader_list.push_back(shader_data.shader_simple);
+
+
+	/* ▼ 새 텍스처-Phong 셰이더 등록 */
+	shader_data.shader_phong_texture.prepare_shader();
+	shader_ID_mapper[SHADER_PHONG_TEXUTRE] = shader_list.size();
+	shader_list.push_back(shader_data.shader_phong_texture);
+
 }
 /* -------------------------------------------------------------------- */
 /*  Building1_vnt.geom ─> 벽 AABB 목록 추출                              */
@@ -385,6 +423,15 @@ void Scene::initialize() {
 	create_camera_list(window.width, window.height, window.aspect_ratio);
 	build_shader_list();
 	build_wall_rects("Data/Building1_vnt.geom");
+
+	/* 과제 2: PNG 텍스처 두 장 로딩 */
+	glGenTextures(N_USER_TEXTURES, texture_names);
+
+	load_png_to_texture("Data/dynamic_objects/my_spider_diff.png",
+		texture_names[TEXTURE_ID_SPIDER], g_cur_filter);
+
+	load_png_to_texture("Data/static_objects/my_woodtower_diff.png",
+		texture_names[TEXTURE_ID_WOOD_TOWER], g_cur_filter);
 }
 
 void Scene::draw_static_world() {

@@ -345,6 +345,20 @@ void display(void) {
 				scene.g_ico_alpha = glm::max(0.1f, scene.g_ico_alpha - 0.1f);
 			break;
 
+			/* -------- 텍스처 필터 토글 (과제 2) -------- */
+			if (key == 'N' || key == 'n') {
+				scene.set_user_filter(0);
+				fprintf(stdout, "[FILTER] GL_NEAREST 활성화\n");
+				glutPostRedisplay();
+				return;
+			}
+			if (key == 'L' || key == 'l') {
+				scene.set_user_filter(1);
+				fprintf(stdout, "[FILTER] GL_LINEAR  활성화\n");
+				glutPostRedisplay();
+				return;
+			}
+
 		default: break;
 		}
 	
