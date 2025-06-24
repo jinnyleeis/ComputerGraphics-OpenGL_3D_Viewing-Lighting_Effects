@@ -131,6 +131,10 @@ struct Shader_Phong : Shader {
 /* ─── Spot-Phong (새 셰이더) ──────────────────────────────────────── */
 struct Shader_Spot_Phong : Shader {
 	GLint loc_ModelViewMatrix, loc_ModelViewMatrixInvTrans;
+	
+	// 재질 필드별 위치
+	GLint loc_mat_ambient, loc_mat_diffuse, loc_mat_specular;
+	GLint loc_mat_emissive, loc_mat_shininess;
 	void  prepare_shader() override;
 
 };
@@ -400,7 +404,9 @@ struct Scene {
 		static_objects.clear();
 		shader_list.clear();
 		//shader_kind = SHADER_SIMPLE;
-		shader_kind = SHADER_PHONG;
+		//shader_kind = SHADER_PHONG;
+		shader_kind = SHADER_SPOT_PHONG;
+
 		ViewMatrix = ProjectionMatrix = glm::mat4(1.0f);
 	//	g_shading_mode = SHADE_SIMPLE;       // <-- NEW
 	}

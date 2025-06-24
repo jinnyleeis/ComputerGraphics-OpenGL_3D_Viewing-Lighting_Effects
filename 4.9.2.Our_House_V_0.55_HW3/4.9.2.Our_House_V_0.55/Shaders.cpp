@@ -88,5 +88,11 @@ void Shader_Spot_Phong::prepare_shader() {
     loc_ModelViewMatrixInvTrans =
         glGetUniformLocation(h_ShaderProgram, "u_ModelViewMatrixInvTrans");
 
+    loc_mat_ambient = glGetUniformLocation(h_ShaderProgram, "u_material.ambient_color");
+    loc_mat_diffuse = glGetUniformLocation(h_ShaderProgram, "u_material.diffuse_color");
+    loc_mat_specular = glGetUniformLocation(h_ShaderProgram, "u_material.specular_color");
+    loc_mat_emissive = glGetUniformLocation(h_ShaderProgram, "u_material.emissive_color");
+    loc_mat_shininess = glGetUniformLocation(h_ShaderProgram, "u_material.specular_exp");
+
     glUseProgram(0);
 }

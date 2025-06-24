@@ -75,7 +75,8 @@ void main() {
         float LN = max(dot(N,L), 0.0);
         if (LN > 0.0) {
             /* diffuse */
-            C += vec4(att,1) * sf *
+        //    C += vec4(att,1) * sf *
+            C += 
                  u_light[i].diffuse_color *
                  u_material.diffuse_color * LN;
 
@@ -83,14 +84,15 @@ void main() {
             vec3  H  = normalize(L + V);
             float NH = max(dot(N,H), 0.0);
             if (NH > 0.0)
-                C += vec4(att,1) * sf *
-                     u_light[i].specular_color *
+              //  C += vec4(att,1) * sf *
+                   C +=u_light[i].specular_color *
                      u_material.specular_color *
                      pow(NH, u_material.specular_exp);
         }
 
         /* ambient */
-        C += vec4(att,1) * sf *
+       // C += vec4(att,1) * sf *
+          C += 
              u_light[i].ambient_color *
              u_material.ambient_color;
     }
