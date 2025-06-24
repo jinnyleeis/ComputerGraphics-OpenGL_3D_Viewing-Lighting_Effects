@@ -27,6 +27,8 @@
     <None Include="Shaders\gouraud.vert" />
     <None Include="Shaders\phong.frag" />
     <None Include="Shaders\phong.vert" />
+    <None Include="Shaders\Spot_World.frag" />
+    <None Include="Shaders\Spot_World.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="4.9.2.Our_House_V_0.55_main.cpp">

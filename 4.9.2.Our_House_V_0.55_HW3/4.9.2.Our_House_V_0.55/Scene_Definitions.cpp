@@ -19,6 +19,11 @@ GLuint texture_names[N_MAX_TEXTURES] = { 0 };
 //static GLenum g_cur_filter = GL_LINEAR;   // 디폴트는 Linear
 static GLenum g_cur_filter = GL_NEAREST;   // 디폴트는 Linear
 
+SpotLight g_spot_lights[MAX_SPOT_LIGHTS];
+int       g_n_spot_lights = 0;
+bool      g_flag_spot_on = true;     // ‘3’ 키 토글
+
+
 void Scene::set_user_filter(unsigned int id)
 {
 	/* id == 0 : NEAREST  |  id == 1 : LINEAR */
@@ -374,6 +379,10 @@ void Scene::build_shader_list() {
 	shader_data.shader_phong_texture.prepare_shader();
 	shader_ID_mapper[SHADER_PHONG_TEXUTRE] = shader_list.size();
 	shader_list.push_back(shader_data.shader_phong_texture);
+
+	shader_data.shader_spot_world.prepare_shader();          // ★★ NEW
+	shader_ID_mapper[SHADER_SPOT_WORLD] = shader_list.size();
+	shader_list.push_back(shader_data.shader_spot_world);
 }
 
 
@@ -384,7 +393,7 @@ void Scene :: apply_user_filter()
 	GLint minF, magF;
 glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &minF);
 glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, &magF);
-printf("[TEX] MIN=0x%X  MAG=0x%X\n", minF, magF);
+//printf("[TEX] MIN=0x%X  MAG=0x%X\n", minF, magF);
 
 }
 /* -------------------------------------------------------------------- */
@@ -449,6 +458,19 @@ void Scene::initialize() {
 
 	load_png_to_texture("Data/static_objects/my_woodtower_diff.png",
 		texture_names[TEXTURE_ID_WOOD_TOWER], g_cur_filter);
+
+	auto add_spot = [&](glm::vec3 p, glm::vec3 dir) {
+		int idx = g_n_spot_lights++;
+		g_spot_lights[idx] = { p, normalize(dir),
+			{0.05,0.05,0.05}, {0.9,0.9,0.8}, {1,1,1},
+			cos(glm::radians(25.f)), 8.f };
+		};
+	/* LIGHTS 오브젝트 인스턴스 위치 → SPOT 배치 */
+	for (const auto& inst : static_geometry_data.light.instances) {
+		glm::vec3 pos = glm::vec3(inst.ModelMatrix[3]);
+		add_spot(pos, glm::vec3(0, 0, -1));         // 천장에서 아래로
+	}
+
 }
 
 void Scene::draw_static_world() {

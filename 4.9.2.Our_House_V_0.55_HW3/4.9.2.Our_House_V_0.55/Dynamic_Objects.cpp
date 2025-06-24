@@ -346,8 +346,8 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 			&shader_list[shader_ID_mapper[SHADER_PHONG_TEXUTRE]].get());
 
 		/* DEBUG: 현재 객체-프레임 정보 */
-		printf("\n[DRAW-TEX ★] objectID=%d  frame=%d  texID=%d  useTex=1\n",
-			object_id, cur_idx, frm.tex_id);
+	//	printf("\n[DRAW-TEX ★] objectID=%d  frame=%d  texID=%d  useTex=1\n",
+		//	object_id, cur_idx, frm.tex_id);
 	
 	}
 	else {

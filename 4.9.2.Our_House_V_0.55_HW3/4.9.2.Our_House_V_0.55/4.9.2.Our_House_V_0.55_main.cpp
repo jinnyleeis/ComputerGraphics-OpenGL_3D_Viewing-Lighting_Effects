@@ -165,6 +165,30 @@ void rotate_camera(Camera& cam, const glm::vec3& localAxis, float angle) {
 
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	auto& shader = scene.shader_data.shader_spot_world;
+	GLuint prog = shader.h_ShaderProgram;
+	glUseProgram(prog);
+
+	// 카메라별 (현재 loop-camera)
+	glUniform3fv(shader.loc_eyePos, 1, &scene.ViewMatrix[3][0]);   // cam pos가 필요하다면 따로
+	glUniform1i(shader.loc_nSpot, g_flag_spot_on ? g_n_spot_lights : 0);
+
+	// spot 배열
+	for (int i = 0; i < g_n_spot_lights; ++i) {
+		const SpotLight& s = g_spot_lights[i];
+		glUniform3fv(shader.loc_spot[i].pos, 1, &s.pos_ws[0]);
+		glUniform3fv(shader.loc_spot[i].dir, 1, &s.dir_ws[0]);
+		glUniform3fv(shader.loc_spot[i].Ia, 1, &s.Ia[0]);
+		glUniform3fv(shader.loc_spot[i].Id, 1, &s.Id[0]);
+		glUniform3fv(shader.loc_spot[i].Is, 1, &s.Is[0]);
+		glUniform1f(shader.loc_spot[i].cutoff, s.cutoff);
+		glUniform1f(shader.loc_spot[i].exp, s.exp);
+	}
+	glUseProgram(0);
+
+
+
 	for (auto camera = scene.camera_list.begin(); camera != scene.camera_list.end(); camera++) {
 		if (camera->get().flag_valid == false) continue;
 		glViewport(camera->get().view_port.x, camera->get().view_port.y,
@@ -193,6 +217,12 @@ void display(void) {
 
 		if (key == '1')          g_shading_mode = SHADE_GOURAUD;
 		else if (key == '2')     g_shading_mode = SHADE_PHONG;
+		else if (key == '3') {
+
+			g_flag_spot_on = !g_flag_spot_on;
+		}
+
+
 
 		// 1) ESC
 		if (key == 27) {

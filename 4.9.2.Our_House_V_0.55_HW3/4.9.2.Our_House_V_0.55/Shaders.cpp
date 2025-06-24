@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "Scene_Definitions.h"
 
 void Shader_Simple::prepare_shader() {
@@ -61,5 +63,35 @@ void Shader_Phong::prepare_shader() {
         "u_ModelViewMatrix");
     loc_ModelViewMatrixInvTrans = glGetUniformLocation(h_ShaderProgram,
         "u_ModelViewMatrixInvTrans");
+    glUseProgram(0);
+}
+
+void Shader_SpotWorld::prepare_shader() {
+    shader_info[0] = { GL_VERTEX_SHADER,   "Shaders/Spot_World.vert" };
+    shader_info[1] = { GL_FRAGMENT_SHADER, "Shaders/Spot_World.frag" };
+    shader_info[2] = { GL_NONE, nullptr };
+
+    h_ShaderProgram = LoadShaders(shader_info);
+    glUseProgram(h_ShaderProgram);
+
+    // object-º°
+    loc_ModelMatrix = glGetUniformLocation(h_ShaderProgram, "u_ModelMatrix");
+    loc_ModelMatrixInvTrans = glGetUniformLocation(h_ShaderProgram, "u_ModelMatrixInvTrans");
+    loc_ModelViewProj = glGetUniformLocation(h_ShaderProgram, "u_ModelViewProj");
+
+    // scene-º°
+    loc_eyePos = glGetUniformLocation(h_ShaderProgram, "u_eyePos_ws");
+    loc_nSpot = glGetUniformLocation(h_ShaderProgram, "u_nSpot");
+
+    char nm[64];
+    for (int i = 0; i < MAX_SPOT_LIGHTS; ++i) {
+        sprintf(nm, "u_spot[%d].pos", i);      loc_spot[i].pos = glGetUniformLocation(h_ShaderProgram, nm);
+        sprintf(nm, "u_spot[%d].dir", i);      loc_spot[i].dir = glGetUniformLocation(h_ShaderProgram, nm);
+        sprintf(nm, "u_spot[%d].Ia", i);       loc_spot[i].Ia = glGetUniformLocation(h_ShaderProgram, nm);
+        sprintf(nm, "u_spot[%d].Id", i);       loc_spot[i].Id = glGetUniformLocation(h_ShaderProgram, nm);
+        sprintf(nm, "u_spot[%d].Is", i);       loc_spot[i].Is = glGetUniformLocation(h_ShaderProgram, nm);
+        sprintf(nm, "u_spot[%d].cutoff", i);   loc_spot[i].cutoff = glGetUniformLocation(h_ShaderProgram, nm);
+        sprintf(nm, "u_spot[%d].expn", i);     loc_spot[i].exp = glGetUniformLocation(h_ShaderProgram, nm);
+    }
     glUseProgram(0);
 }

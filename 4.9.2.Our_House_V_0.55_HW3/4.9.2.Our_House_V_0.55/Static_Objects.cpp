@@ -1,7 +1,7 @@
-#define _CRT_SECURE_NO_WARNINGS
+ï»¿#define _CRT_SECURE_NO_WARNINGS
 
 #include "Scene_Definitions.h"
-#include <glm/gtc/matrix_inverse.hpp>   // ÆÄÀÏ ¸Ç À§
+#include <glm/gtc/matrix_inverse.hpp>   // íŒŒì¼ ë§¨ ìœ„
 
 
 void Static_Object::read_geometry(int bytes_per_primitive) {
@@ -30,14 +30,14 @@ void Static_Object::prepare_geom_of_static_object() {
 	n_bytes_per_vertex = n_fields * sizeof(float); // 3 for vertex, 3 for normal, and 2 for texcoord
 	n_bytes_per_triangle = 3 * n_bytes_per_vertex;
 
-	/* ¦¡¦¡ (A) geometry ·Îµå ¿©ºÎ °áÁ¤ ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ */
-	if (vertices == nullptr) {            // ¾ÆÁ÷ ¹öÅØ½º°¡ ¾ø´Â °æ¿ì
-		if (this->filename[0] == '\0') {  // ¡ç  ¸â¹ö º¯¼ö¸¦ Á¤È®È÷ ÂüÁ¶
+	/* â”€â”€ (A) geometry ë¡œë“œ ì—¬ë¶€ ê²°ì • â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+	if (vertices == nullptr) {            // ì•„ì§ ë²„í…ìŠ¤ê°€ ì—†ëŠ” ê²½ìš°
+		if (this->filename[0] == '\0') {  // â†  ë©¤ë²„ ë³€ìˆ˜ë¥¼ ì •í™•íˆ ì°¸ì¡°
 			fprintf(stderr,
 				"[Static_Object] ERROR: no geometry source (filename & vertices both empty)\n");
 			exit(EXIT_FAILURE);
 		}
-		/* ÆÄÀÏÀÌ¸§ÀÌ ÀÖÀ¸¸é ±âÁ¸ ¹æ½Ä´ë·Î ÀĞ¾î ¿È */
+		/* íŒŒì¼ì´ë¦„ì´ ìˆìœ¼ë©´ ê¸°ì¡´ ë°©ì‹ëŒ€ë¡œ ì½ì–´ ì˜´ */
 		read_geometry(n_bytes_per_triangle);
 	}
 
@@ -55,19 +55,19 @@ void Static_Object::prepare_geom_of_static_object() {
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-	/* À§Ä¡ */
+	/* ìœ„ì¹˜ */
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
 		n_bytes_per_vertex, (void*)0);
 	glEnableVertexAttribArray(0);
 
-	/* ¹ı¼± */
+	/* ë²•ì„  */
 	if (n_fields >= 6) {
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
 			n_bytes_per_vertex, (void*)(3 * sizeof(float)));
 		glEnableVertexAttribArray(1);
 	}
 
-	/* ÅØ½ºÃ³ ÁÂÇ¥ */
+	/* í…ìŠ¤ì²˜ ì¢Œí‘œ */
 	if (n_fields == 8) {
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
 			n_bytes_per_vertex, (void*)(6 * sizeof(float)));
@@ -183,7 +183,7 @@ void Frame::define_object() {
 void Bike::define_object() {
 	
 		glm::mat4* M; Material* mat;
-		strcpy(filename, "Data/static_objects/bike_vnt.geom");  // °æ·Î È®ÀÎ!
+		strcpy(filename, "Data/static_objects/bike_vnt.geom");  // ê²½ë¡œ í™•ì¸!
 		n_fields = 8;  front_face_mode = GL_CCW;
 		prepare_geom_of_static_object();  flag_valid = true;
 
@@ -231,7 +231,7 @@ void Ironman :: define_object() {
 		instances.emplace_back();
 		M = &instances.back().ModelMatrix;
 		*M = glm::translate(glm::mat4(1.0f), glm::vec3(157.0f, 76.5f, 0.0f));
-		*M = glm::scale(*M, glm::vec3(5.0f));   // ½Ç¹° Å©±â ¼®»ó
+		*M = glm::scale(*M, glm::vec3(5.0f));   // ì‹¤ë¬¼ í¬ê¸° ì„ìƒ
 		*M = glm::rotate(*M, -270.f * TO_RADIAN, glm::vec3(1, 0, 0));
 		mat = &instances.back().material;
 		mat->ambient = glm::vec4(0.247f, 0.199f, 0.074f, 1);
@@ -288,8 +288,8 @@ class Icosahedron : public Static_Object {
 public:
 	Icosahedron(STATIC_OBJECT_ID id) : Static_Object(id) {}
 	void define_object() {
-		/* 1) Á¤Á¡/ÀÎµ¦½º µ¥ÀÌÅÍ */
-		float X = 0.525731f, Z = 0.850651f; // Á¤±ÔÈ­µÈ °ª
+		/* 1) ì •ì /ì¸ë±ìŠ¤ ë°ì´í„° */
+		float X = 0.525731f, Z = 0.850651f; // ì •ê·œí™”ëœ ê°’
 		const GLfloat vdata[12][3] = {
 			{-X,0,Z},{X,0,Z},{-X,0,-Z},{X,0,-Z},
 			{0,Z,X},{0,Z,-X},{0,-Z,X},{0,-Z,-X},
@@ -302,7 +302,7 @@ public:
 			{6,1,10},{9,0,11},{9,11,2},{9,2,5},{7,2,11}
 		};
 
-		/* 2) ÇÑ ¸é(»ï°¢Çü)¸¶´Ù 3-¹öÅØ½º push ¡æ vertices[] */
+		/* 2) í•œ ë©´(ì‚¼ê°í˜•)ë§ˆë‹¤ 3-ë²„í…ìŠ¤ push â†’ vertices[] */
 		std::vector<GLfloat> verts;
 		for (int f = 0; f < 20; ++f)
 			for (int k = 0; k < 3; ++k) {
@@ -314,7 +314,7 @@ public:
 		front_face_mode = GL_CCW;
 		flag_valid = true;
 
-		/* 3) GPU Àü¼Û */
+		/* 3) GPU ì „ì†¡ */
 		glGenBuffers(1, &VBO);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		glBufferData(GL_ARRAY_BUFFER,
@@ -328,10 +328,10 @@ public:
 		glBindVertexArray(0);
 
 
-		/* 2) ÀÎ½ºÅÏ½º ÇÑ °³ »ı¼º */
+		/* 2) ì¸ìŠ¤í„´ìŠ¤ í•œ ê°œ ìƒì„± */
 		instances.emplace_back();
-		/* À§Ä¡¡¤½ºÄÉÀÏÀº °íÁ¤, È¸ÀüÀº ¸Å ÇÁ·¹ÀÓ º°µµ °»½Å */
-		instances.back().ModelMatrix = glm::mat4(1.f);   // ¡Ú ÃÊ±â°ª¸¸ 1
+		/* ìœ„ì¹˜Â·ìŠ¤ì¼€ì¼ì€ ê³ ì •, íšŒì „ì€ ë§¤ í”„ë ˆì„ ë³„ë„ ê°±ì‹  */
+		instances.back().ModelMatrix = glm::mat4(1.f);   // â˜… ì´ˆê¸°ê°’ë§Œ 1
 	}
 };
 
@@ -415,7 +415,7 @@ void print_mat4(const char* string, glm::mat4 M) {
 
 /* -------------------------------------------------------------------- */
 /*  Static_Object::draw_object                                          */
-/*  - Á¤Àû ¿ÀºêÁ§Æ® 1°³(¶Ç´Â ÀÎ½ºÅÏ½ºµé)¸¦ ÁÖ¾îÁø ¼ÎÀÌ´õ·Î ±×¸°´Ù          */
+/*  - ì •ì  ì˜¤ë¸Œì íŠ¸ 1ê°œ(ë˜ëŠ” ì¸ìŠ¤í„´ìŠ¤ë“¤)ë¥¼ ì£¼ì–´ì§„ ì…°ì´ë”ë¡œ ê·¸ë¦°ë‹¤          */
 /* -------------------------------------------------------------------- */
 void Static_Object::draw_object(glm::mat4& ViewMatrix,
 	glm::mat4& ProjectionMatrix,
@@ -424,14 +424,14 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 {
 	glFrontFace(front_face_mode);
 
-	/* ---------- (1) ÀÌ ¿ÀºêÁ§Æ®¿¡ Àû¿ëÇÒ ÃÖÁ¾ ¼ÎÀÌ´õ °áÁ¤ ---------------- */
+	/* ---------- (1) ì´ ì˜¤ë¸Œì íŠ¸ì— ì ìš©í•  ìµœì¢… ì…°ì´ë” ê²°ì • ---------------- */
 	const bool  has_tex = (tex_id >= 0);
-	bool        is_cat = (object_id == STATIC_OBJECT_CAT);          // ¡Ú °í¾çÀÌ¸¸ Æ¯¼ö Ã³¸®
+	bool        is_cat = (object_id == STATIC_OBJECT_CAT);          // â˜… ê³ ì–‘ì´ë§Œ íŠ¹ìˆ˜ ì²˜ë¦¬
 
 	SHADER_ID eff;
 	if (has_tex)
-		eff = SHADER_PHONG_TEXUTRE;                                  // (±âÁ¸) ÅØ½ºÃ³-Phong
-	else if (is_cat) {                                               // ¡Ú shading mode Åä±Û
+		eff = SHADER_PHONG_TEXUTRE;                                  // (ê¸°ì¡´) í…ìŠ¤ì²˜-Phong
+	else if (is_cat) {                                               // â˜… shading mode í† ê¸€
 		switch (g_shading_mode) {
 		case SHADE_GOURAUD: eff = SHADER_GOURAUD;  break;
 		case SHADE_PHONG:   eff = SHADER_PHONG;    break;
@@ -439,23 +439,23 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 		}
 	}
 	else
-		eff = default_shader;                                        // ±âÅ¸ ¿ÀºêÁ§Æ®
+		eff = default_shader;                                        // ê¸°íƒ€ ì˜¤ë¸Œì íŠ¸
 
-	/* ---------- (2) °í¾çÀÌ´Â Ç×»ó Æú¸®°ï-FILL·Î °­Á¦ -------------------- */
+	/* ---------- (2) ê³ ì–‘ì´ëŠ” í•­ìƒ í´ë¦¬ê³¤-FILLë¡œ ê°•ì œ -------------------- */
 	GLint prevPoly[2] = { GL_FILL, GL_FILL };
 	if (is_cat) {
 		glGetIntegerv(GL_POLYGON_MODE, prevPoly);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);                   // ¡Ú
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);                   // â˜…
 	}
 
-	/* ---------- (3) ¸ğµç ÀÎ½ºÅÏ½º ·»´õ¸µ -------------------------------- */
+	/* ---------- (3) ëª¨ë“  ì¸ìŠ¤í„´ìŠ¤ ë Œë”ë§ -------------------------------- */
 	for (const Instance& inst : instances) {
 		glm::mat4 MV = ViewMatrix * inst.ModelMatrix;
 		glm::mat4 MVP = ProjectionMatrix * MV;
 		glm::mat3 MVN = glm::inverseTranspose(glm::mat3(MV));
 
 		switch (eff) {
-			/* ----- (a) ´Ü¼ø »ö (±âÁ¸) ------------------------------------ */
+			/* ----- (a) ë‹¨ìˆœ ìƒ‰ (ê¸°ì¡´) ------------------------------------ */
 		case SHADER_SIMPLE: {
 			auto* sh = static_cast<Shader_Simple*>(
 				&shader_list[shader_ID_mapper[SHADER_SIMPLE]].get());
@@ -490,7 +490,7 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 			break;
 		}
 
-						 /* ----- (d) ÅØ½ºÃ³-Phong (±âÁ¸) -------------------------------- */
+						 /* ----- (d) í…ìŠ¤ì²˜-Phong (ê¸°ì¡´) -------------------------------- */
 		case SHADER_PHONG_TEXUTRE: {
 			auto* sh = static_cast<Shader_Phong_Texture*>(
 				&shader_list[shader_ID_mapper[SHADER_PHONG_TEXUTRE]].get());
@@ -506,16 +506,37 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 			glUniform1i(sh->loc_texture, tex_id);
 			break;
 		}
+
+		case SHADER_SPOT_WORLD: {
+			auto* sh = static_cast<Shader_SpotWorld*>(
+				&shader_list[shader_ID_mapper[SHADER_SPOT_WORLD]].get());
+
+			glUseProgram(sh->h_ShaderProgram);
+			glUniformMatrix4fv(sh->loc_ModelMatrix, 1, GL_FALSE, &inst.ModelMatrix[0][0]);
+			glm::mat3 MN = glm::inverseTranspose(glm::mat3(inst.ModelMatrix));
+			glUniformMatrix3fv(sh->loc_ModelMatrixInvTrans, 1, GL_FALSE, &MN[0][0]);
+
+			glm::mat4 MVP = ProjectionMatrix * ViewMatrix * inst.ModelMatrix;
+			glUniformMatrix4fv(sh->loc_ModelViewProj, 1, GL_FALSE, &MVP[0][0]);
+
+			/* ì¬ì§ˆ â€“ ê°„ë‹¨íˆ diffuse ë§Œ */
+			glUniform3fv(glGetUniformLocation(sh->h_ShaderProgram, "u_matKa"), 1, &inst.material.ambient[0]);
+			glUniform3fv(glGetUniformLocation(sh->h_ShaderProgram, "u_matKd"), 1, &inst.material.diffuse[0]);
+			glUniform3fv(glGetUniformLocation(sh->h_ShaderProgram, "u_matKs"), 1, &inst.material.specular[0]);
+			glUniform1f(glGetUniformLocation(sh->h_ShaderProgram, "u_matShin"), inst.material.exponent);
+			break;
+		}
+
 		} /* switch */
 
-		/* ----- (°øÅë) Á¤Á¡ ¹è¿­ & µå·Î¿ì ----------------------------- */
+		/* ----- (ê³µí†µ) ì •ì  ë°°ì—´ & ë“œë¡œìš° ----------------------------- */
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3 * n_triangles);
 	}
 
-	/* ---------- (4) »óÅÂ º¹¿ø ---------------------------------------- */
+	/* ---------- (4) ìƒíƒœ ë³µì› ---------------------------------------- */
 	if (is_cat)
-		glPolygonMode(GL_FRONT_AND_BACK, prevPoly[0]);               // ¡Ú µÇµ¹¸®±â
+		glPolygonMode(GL_FRONT_AND_BACK, prevPoly[0]);               // â˜… ë˜ëŒë¦¬ê¸°
 
 	glBindVertexArray(0);
 	glUseProgram(0);

@@ -57,9 +57,27 @@ enum USER_TEXTURE_ID {
 };
 extern GLuint texture_names[N_MAX_TEXTURES];
 
-enum SHADER_ID { SHADER_SIMPLE = 0, SHADER_GOURAUD, SHADER_PHONG, SHADER_PHONG_TEXUTRE };
+enum SHADER_ID { SHADER_SIMPLE = 0, SHADER_GOURAUD, SHADER_PHONG, SHADER_PHONG_TEXUTRE, SHADER_SPOT_WORLD
+};
 enum SHADING_MODE { SHADE_SIMPLE = 0, SHADE_GOURAUD, SHADE_PHONG };
 extern SHADING_MODE g_shading_mode;      // <-- NEW
+
+// ───── [추가] ────────────────────────────────────────────────────────────
+#define MAX_SPOT_LIGHTS 8
+
+struct SpotLight {
+	glm::vec3 pos_ws;   // 월드 좌표
+	glm::vec3 dir_ws;   // 월드 방향(정규화)
+	glm::vec3 Ia, Id, Is;
+	float     cutoff;   // cos(θ)
+	float     exp;      // 집중도
+};
+
+extern SpotLight g_spot_lights[MAX_SPOT_LIGHTS];
+extern int       g_n_spot_lights;
+extern bool      g_flag_spot_on;
+// ────────────────────────────────────────────────────────────────────────
+
 
 
 struct Shader {
@@ -104,6 +122,18 @@ struct Shader_Phong : Shader {
 	void  prepare_shader() override;
 };
 
+struct Shader_SpotWorld : Shader {
+	// object-별
+	GLint loc_ModelMatrix, loc_ModelMatrixInvTrans, loc_ModelViewProj;
+	// scene-별
+	GLint loc_eyePos;
+	GLint loc_nSpot;
+	struct {                         // uniform 배열 인덱스 편리하게 보관
+		GLint pos, dir, Ia, Id, Is, cutoff, exp;
+	} loc_spot[MAX_SPOT_LIGHTS];
+
+	void prepare_shader() override;
+};
 
 struct Shader_Data {
 	Shader_Simple shader_simple;
@@ -111,6 +141,7 @@ struct Shader_Data {
 	 Shader_Gouraud shader_gouraud;
 	// Shader_Phong_Texture Shader_Phong_texture;
 	Shader_Phong_Texture  shader_phong_texture;
+	Shader_SpotWorld   shader_spot_world;
 };
 
 struct Material {
