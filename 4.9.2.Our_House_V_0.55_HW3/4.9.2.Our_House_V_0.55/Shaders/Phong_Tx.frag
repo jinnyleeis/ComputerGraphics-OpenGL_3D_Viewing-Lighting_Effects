@@ -13,5 +13,5 @@ void main()
     float NdotL = max(dot(N, L), 0.0);
 
     vec4 tex = texture(u_base_texture, v_tex);
-    final_color = vec4(tex.rgb * NdotL, tex.a);
+    final_color = vec4(tex.rgb, tex.a);
 }
