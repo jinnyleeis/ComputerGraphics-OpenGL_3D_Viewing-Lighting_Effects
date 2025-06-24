@@ -191,6 +191,9 @@ void display(void) {
 
 		Camera& cam = ACTIVE_CAM();
 
+		if (key == '1')          g_shading_mode = SHADE_GOURAUD;
+		else if (key == '2')     g_shading_mode = SHADE_PHONG;
+
 		// 1) ESC
 		if (key == 27) {
 			glutLeaveMainLoop();

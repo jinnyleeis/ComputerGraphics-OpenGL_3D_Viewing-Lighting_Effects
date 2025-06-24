@@ -413,40 +413,85 @@ void print_mat4(const char* string, glm::mat4 M) {
 }
 
 
+/* -------------------------------------------------------------------- */
+/*  Static_Object::draw_object                                          */
+/*  - 정적 오브젝트 1개(또는 인스턴스들)를 주어진 셰이더로 그린다          */
+/* -------------------------------------------------------------------- */
 void Static_Object::draw_object(glm::mat4& ViewMatrix,
 	glm::mat4& ProjectionMatrix,
-	SHADER_ID shader_kind,
+	SHADER_ID  default_shader,
 	std::vector<std::reference_wrapper<Shader>>& shader_list)
 {
 	glFrontFace(front_face_mode);
 
-	/* 객체에 텍스처가 지정되었으면 무조건 Phong-Texture 셰이더 사용 */
-	bool use_tex = (tex_id >= 0);
-	SHADER_ID eff = use_tex ? SHADER_PHONG_TEXUTRE : shader_kind;
+	/* ---------- (1) 이 오브젝트에 적용할 최종 셰이더 결정 ---------------- */
+	const bool  has_tex = (tex_id >= 0);
+	bool        is_cat = (object_id == STATIC_OBJECT_CAT);          // ★ 고양이만 특수 처리
 
-	GLint prevPoly[2];
-	if (tex_id >= 0) {
+	SHADER_ID eff;
+	if (has_tex)
+		eff = SHADER_PHONG_TEXUTRE;                                  // (기존) 텍스처-Phong
+	else if (is_cat) {                                               // ★ shading mode 토글
+		switch (g_shading_mode) {
+		case SHADE_GOURAUD: eff = SHADER_GOURAUD;  break;
+		case SHADE_PHONG:   eff = SHADER_PHONG;    break;
+		default:            eff = SHADER_SIMPLE;   break;
+		}
+	}
+	else
+		eff = default_shader;                                        // 기타 오브젝트
+
+	/* ---------- (2) 고양이는 항상 폴리곤-FILL로 강제 -------------------- */
+	GLint prevPoly[2] = { GL_FILL, GL_FILL };
+	if (is_cat) {
 		glGetIntegerv(GL_POLYGON_MODE, prevPoly);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);                   // ★
 	}
 
-	for (size_t i = 0; i < instances.size(); ++i) {
-		const Instance& inst = instances[i];
-
+	/* ---------- (3) 모든 인스턴스 렌더링 -------------------------------- */
+	for (const Instance& inst : instances) {
 		glm::mat4 MV = ViewMatrix * inst.ModelMatrix;
 		glm::mat4 MVP = ProjectionMatrix * MV;
 		glm::mat3 MVN = glm::inverseTranspose(glm::mat3(MV));
 
-		/* ---------------------------------------------------------------- */
-		if (eff == SHADER_SIMPLE) {
+		switch (eff) {
+			/* ----- (a) 단순 색 (기존) ------------------------------------ */
+		case SHADER_SIMPLE: {
 			auto* sh = static_cast<Shader_Simple*>(
 				&shader_list[shader_ID_mapper[SHADER_SIMPLE]].get());
 
 			glUseProgram(sh->h_ShaderProgram);
 			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
 			glUniform3fv(sh->loc_primitive_color, 1, &inst.material.diffuse[0]);
+			break;
 		}
-		else { // SHADER_PHONG_TEXUTRE
+
+						  /* ----- (b) Gouraud ------------------------------------------- */
+		case SHADER_GOURAUD: {
+			auto* sh = static_cast<Shader_Gouraud*>(
+				&shader_list[shader_ID_mapper[SHADER_GOURAUD]].get());
+
+			glUseProgram(sh->h_ShaderProgram);
+			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
+			glUniformMatrix4fv(sh->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
+			glUniformMatrix3fv(sh->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
+			break;
+		}
+
+						   /* ----- (c) Phong --------------------------------------------- */
+		case SHADER_PHONG: {
+			auto* sh = static_cast<Shader_Phong*>(
+				&shader_list[shader_ID_mapper[SHADER_PHONG]].get());
+
+			glUseProgram(sh->h_ShaderProgram);
+			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
+			glUniformMatrix4fv(sh->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
+			glUniformMatrix3fv(sh->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
+			break;
+		}
+
+						 /* ----- (d) 텍스처-Phong (기존) -------------------------------- */
+		case SHADER_PHONG_TEXUTRE: {
 			auto* sh = static_cast<Shader_Phong_Texture*>(
 				&shader_list[shader_ID_mapper[SHADER_PHONG_TEXUTRE]].get());
 
@@ -455,22 +500,22 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 			glUniformMatrix4fv(sh->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
 			glUniformMatrix3fv(sh->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
 
-			/* 텍스처 바인딩 */
 			glActiveTexture(GL_TEXTURE0 + tex_id);
 			glBindTexture(GL_TEXTURE_2D, texture_names[tex_id]);
-
 			scene.apply_user_filter();
-
-
 			glUniform1i(sh->loc_texture, tex_id);
+			break;
 		}
-		/* ---------------------------------------------------------------- */
+		} /* switch */
 
+		/* ----- (공통) 정점 배열 & 드로우 ----------------------------- */
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3 * n_triangles);
 	}
-	if (tex_id >= 0)
-		glPolygonMode(GL_FRONT_AND_BACK, prevPoly[0]);
+
+	/* ---------- (4) 상태 복원 ---------------------------------------- */
+	if (is_cat)
+		glPolygonMode(GL_FRONT_AND_BACK, prevPoly[0]);               // ★ 되돌리기
 
 	glBindVertexArray(0);
 	glUseProgram(0);

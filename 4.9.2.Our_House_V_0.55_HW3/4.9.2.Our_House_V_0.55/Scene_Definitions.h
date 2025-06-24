@@ -57,7 +57,10 @@ enum USER_TEXTURE_ID {
 };
 extern GLuint texture_names[N_MAX_TEXTURES];
 
-enum SHADER_ID { SHADER_SIMPLE = 0, SHADER_PHONG, SHADER_PHONG_TEXUTRE };
+enum SHADER_ID { SHADER_SIMPLE = 0, SHADER_GOURAUD, SHADER_PHONG, SHADER_PHONG_TEXUTRE };
+enum SHADING_MODE { SHADE_SIMPLE = 0, SHADE_GOURAUD, SHADE_PHONG };
+extern SHADING_MODE g_shading_mode;      // <-- NEW
+
 
 struct Shader {
 	ShaderInfo shader_info[3];
@@ -89,9 +92,23 @@ struct Shader_Phong_Texture : Shader {
 	void prepare_shader();
 };
 
+/* 式式式 Gouraud per-vertex 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式 */
+struct Shader_Gouraud : Shader {
+	GLint loc_ModelViewMatrix, loc_ModelViewMatrixInvTrans;
+	void  prepare_shader() override;
+};
+
+/* 式式式 Phong per-fragment 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式 */
+struct Shader_Phong : Shader {
+	GLint loc_ModelViewMatrix, loc_ModelViewMatrixInvTrans;
+	void  prepare_shader() override;
+};
+
+
 struct Shader_Data {
 	Shader_Simple shader_simple;
-	// Shader_Phong shader_phong;
+	 Shader_Phong shader_phong;
+	 Shader_Gouraud shader_gouraud;
 	// Shader_Phong_Texture Shader_Phong_texture;
 	Shader_Phong_Texture  shader_phong_texture;
 };
@@ -351,6 +368,7 @@ struct Scene {
 		shader_list.clear();
 		shader_kind = SHADER_SIMPLE;
 		ViewMatrix = ProjectionMatrix = glm::mat4(1.0f);
+		g_shading_mode = SHADE_SIMPLE;       // <-- NEW
 	}
 
 

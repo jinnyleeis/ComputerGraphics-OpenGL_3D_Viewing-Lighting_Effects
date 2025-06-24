@@ -358,19 +358,24 @@ void Scene::create_camera_list(int w, int h, float aspect) {
 	camera_list.push_back(camera_data.cam_cctv_d);
 }
 
-
 void Scene::build_shader_list() {
 	shader_data.shader_simple.prepare_shader();
 	shader_ID_mapper[SHADER_SIMPLE] = shader_list.size();
 	shader_list.push_back(shader_data.shader_simple);
 
+	shader_data.shader_gouraud.prepare_shader();     // <-- NEW
+	shader_ID_mapper[SHADER_GOURAUD] = shader_list.size();
+	shader_list.push_back(shader_data.shader_gouraud);
 
-	/* ▼ 새 텍스처-Phong 셰이더 등록 */
+	shader_data.shader_phong.prepare_shader();       // <-- NEW
+	shader_ID_mapper[SHADER_PHONG] = shader_list.size();
+	shader_list.push_back(shader_data.shader_phong);
+
 	shader_data.shader_phong_texture.prepare_shader();
 	shader_ID_mapper[SHADER_PHONG_TEXUTRE] = shader_list.size();
 	shader_list.push_back(shader_data.shader_phong_texture);
-
 }
+
 
 void Scene :: apply_user_filter()
 {
