@@ -212,8 +212,8 @@ void display(void) {
 			// clamp & update
 			scene.g_orbit.upDown = glm::clamp(
 				scene.g_orbit.upDown,
-				-glm::half_pi<float>() * 0.15f + 0.05f,
-				glm::half_pi<float>() - 0.05f);
+				-glm::half_pi<float>() * 0.25f + 0.05f,
+				glm::half_pi<float>() - 0.01f);
 
 			scene.g_orbit.leftRight= glm::clamp(
 				scene.g_orbit.leftRight,

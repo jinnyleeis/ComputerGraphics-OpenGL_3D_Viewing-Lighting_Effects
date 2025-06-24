@@ -159,7 +159,7 @@ void Spider_D::define_object() {
 		object_frames[i].tex_id = TEXTURE_ID_SPIDER;   // ← 추가
 
 		cur_MM = &(object_frames[i].instances.back().ModelMatrix);
-		*cur_MM = glm::scale(glm::mat4(1.0f), glm::vec3(12.40f));
+		* cur_MM = glm::scale(glm::mat4(1.f), glm::vec3(12.4f));
 
 
 		cur_material = &(object_frames[i].instances.back().material);
@@ -194,6 +194,7 @@ void Wolf_D::define_object() {
 
 		/* 4. �ν��Ͻ� 1���� ��� �� ModelMatrix & Material ���� */
 		object_frames[i].instances.emplace_back();
+		object_frames[i].tex_id = TEXTURE_ID_WOLF;
 		cur_MM = &(object_frames[i].instances.back().ModelMatrix);
 
 		/* ���� ������ / ���� ������ */
@@ -305,10 +306,10 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 	case DYNAMIC_OBJECT_SPIDER: {
 		glm::vec3 dir, pos = path_pos_dir(t_ms, SPIDER_PATH, N_SPIDER_SEG, &dir);
 		float heading = atan2f(dir.y, dir.x);
-		float roll = t_ms * 0.005f;               // 바퀴 회전
+		float roll = t_ms * 0.001f;               // 바퀴 회전
 		ModelMatrix = glm::translate(glm::mat4(1.f), pos) *
 			glm::rotate(glm::mat4(1.f),
-				heading + glm::half_pi<float>(),
+				heading*0.1f + glm::half_pi<float>(),
 				glm::vec3(0, 0, 1)) *
 			glm::rotate(glm::mat4(1.f), roll, glm::vec3(1, 0, 0));
 		break;
@@ -343,6 +344,10 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 	if (eff == SHADER_PHONG_TEXUTRE) {
 		sh_tx = static_cast<Shader_Phong_Texture*>(
 			&shader_list[shader_ID_mapper[SHADER_PHONG_TEXUTRE]].get());
+
+		/* DEBUG: 현재 객체-프레임 정보 */
+		printf("\n[DRAW-TEX ★] objectID=%d  frame=%d  texID=%d  useTex=1\n",
+			object_id, cur_idx, frm.tex_id);
 	
 	}
 	else {
@@ -417,9 +422,7 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 		drawOne(GL_BACK, 0, 1.0f);
 	}
 
-	/* --- 상태 복원 --- */
-	glBindVertexArray(0);
-	glUseProgram(0);
+
 	if (eff == SHADER_PHONG_TEXUTRE)
 		glPolygonMode(GL_FRONT_AND_BACK, prevPoly[0]);
 

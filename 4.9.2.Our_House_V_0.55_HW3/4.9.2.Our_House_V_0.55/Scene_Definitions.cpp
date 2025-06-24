@@ -16,7 +16,9 @@ unsigned int shader_ID_mapper[N_MAX_SHADERS];
 
 GLuint texture_names[N_MAX_TEXTURES] = { 0 };
 
-static GLenum g_cur_filter = GL_LINEAR;   // 디폴트는 Linear
+//static GLenum g_cur_filter = GL_LINEAR;   // 디폴트는 Linear
+static GLenum g_cur_filter = GL_NEAREST;   // 디폴트는 Linear
+
 void Scene::set_user_filter(unsigned int id)
 {
 	/* id == 0 : NEAREST  |  id == 1 : LINEAR */
@@ -32,7 +34,11 @@ void Scene::set_user_filter(unsigned int id)
 		glBindTexture(GL_TEXTURE_2D, tex);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, g_cur_min_filter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, g_cur_mag_filter);
+
 	}
+	printf("[FILTER-SET ★] DONE  → g_cur_min_filter=0x%X  g_cur_mag_filter=0x%X\n\n",
+		g_cur_min_filter, g_cur_mag_filter);
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -370,6 +376,11 @@ void Scene :: apply_user_filter()
 {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, scene.g_cur_min_filter);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, scene.g_cur_mag_filter);
+	GLint minF, magF;
+glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &minF);
+glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, &magF);
+printf("[TEX] MIN=0x%X  MAG=0x%X\n", minF, magF);
+
 }
 /* -------------------------------------------------------------------- */
 /*  Building1_vnt.geom ─> 벽 AABB 목록 추출                              */

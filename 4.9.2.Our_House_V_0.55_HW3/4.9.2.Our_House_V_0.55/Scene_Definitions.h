@@ -51,6 +51,7 @@ enum DYNAMIC_OBJECT_ID {
 enum USER_TEXTURE_ID {
 	TEXTURE_ID_FLOOR = 0,        // 이미 예제에서 사용
 	TEXTURE_ID_SPIDER = 1,       // 동적 오브젝트
+	TEXTURE_ID_WOLF = 1,       // 동적 오브젝트
 	TEXTURE_ID_WOOD_TOWER = 2,   // 정적 오브젝트
 	N_USER_TEXTURES
 };
