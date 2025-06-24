@@ -143,6 +143,8 @@
     <None Include="Shaders\Phong_Tx.vert" />
     <None Include="Shaders\simple.frag" />
     <None Include="Shaders\simple.vert" />
+    <None Include="Shaders\spot_phong.frag" />
+    <None Include="Shaders\spot_phong.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="4.9.2.Our_House_V_0.55_main.cpp" />

@@ -17,6 +17,19 @@ static Camera_ID   g_active_cam_id = CAMERA_MAIN;
 static Camera_ID g_cur_cam_id = CAMERA_MAIN;
 static Camera_ID g_prev_cam_id = CAMERA_MAIN;   // 최초엔 동일
 
+/* ── 디버깅 매크로 ─────────────────────────────────────────── */
+#ifdef DEBUG_LIGHTS
+#define DBG(fmt, ...) fprintf(stderr,"[DBG] " fmt "\n", ##__VA_ARGS__)
+#define GL_CHECK()                                                         \
+    { GLenum err = glGetError();                                             \
+      if (err!=GL_NO_ERROR)                                                  \
+         fprintf(stderr,"[GL_ERROR] 0x%X @ %s:%d\n",err,__FILE__,__LINE__); }
+#else
+#define DBG(...)
+#define GL_CHECK()
+#endif
+
+
 static void debug_axis_mm(const Camera& cam, const char* tag)
 {
 	fprintf(stderr,
@@ -193,6 +206,30 @@ void display(void) {
 
 		if (key == '1')          g_shading_mode = SHADE_GOURAUD;
 		else if (key == '2')     g_shading_mode = SHADE_PHONG;
+
+		if (key == '3' || key == '4' || key == '5') {
+			int L = (key == '3') ? 0 : (key == '4') ? 1 : 2;
+			scene.light[L].light_on ^= 1;               // 토글
+			DBG("key='%c'  → light[%d].light_on=%d", key, L, scene.light[L].light_on);
+
+			auto* sh = static_cast<Shader_Spot_Phong*>(
+				&scene.shader_list[shader_ID_mapper[SHADER_SPOT_PHONG]].get());
+			glUseProgram(sh->h_ShaderProgram);
+			glUniform1i(scene.loc_light[L].light_on, scene.light[L].light_on);
+
+#ifdef DEBUG_LIGHTS
+			GLint check = 0;
+			glGetUniformiv(sh->h_ShaderProgram, scene.loc_light[L].light_on, &check);
+			DBG("   uniform location=%d  value_in_GPU=%d",
+				scene.loc_light[L].light_on, check);
+#endif
+			glUseProgram(0);
+			GL_CHECK();
+			glutPostRedisplay();
+			return;
+		}
+
+
 
 		// 1) ESC
 		if (key == 27) {

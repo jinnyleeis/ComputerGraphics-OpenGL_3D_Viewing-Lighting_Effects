@@ -30,6 +30,26 @@ extern unsigned int dynamic_object_ID_mapper[N_MAX_DYNAMIC_OBJECTS];
 extern unsigned int camera_ID_mapper[N_MAX_CAMERAS];
 extern unsigned int shader_ID_mapper[N_MAX_SHADERS];
 
+#define NUMBER_OF_LIGHTS_SUPPORTED 4
+struct Light_Parameters {
+	int   light_on = 0;                  // 0: off, 1: on
+	glm::vec4 position = { 0,0,1,0 };    // WC or EC (w=1: point, w=0: dir)
+	glm::vec4 ambient = { 0,0,0,1 };
+	glm::vec4 diffuse = { 0,0,0,1 };
+	glm::vec4 specular = { 0,0,0,1 };
+	glm::vec3 spot_dir = { 0,0,-1 };     // only for spot
+	float     spot_exp = 0.0f;
+	float     spot_cut = 180.0f;       // 180 ╮ no spot
+	glm::vec4 atten = { 1,0,0,0 };    // .w℅0 ╮ no attenuation
+};
+
+struct loc_Light_Parameters {
+	GLint light_on, position;
+	GLint ambient, diffuse, specular;
+	GLint spot_dir, spot_exp, spot_cut, atten;
+};
+/* 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式 */
+
 enum STATIC_OBJECT_ID {
 	STATIC_OBJECT_BUILDING = 0, STATIC_OBJECT_TABLE,
 	STATIC_OBJECT_TEAPOT, 
@@ -57,7 +77,8 @@ enum USER_TEXTURE_ID {
 };
 extern GLuint texture_names[N_MAX_TEXTURES];
 
-enum SHADER_ID { SHADER_SIMPLE = 0, SHADER_GOURAUD, SHADER_PHONG, SHADER_PHONG_TEXUTRE };
+enum SHADER_ID { SHADER_SIMPLE = 0, SHADER_GOURAUD, SHADER_PHONG, SHADER_PHONG_TEXUTRE, SHADER_SPOT_PHONG,
+};
 enum SHADING_MODE { SHADE_SIMPLE = 0, SHADE_GOURAUD, SHADE_PHONG };
 extern SHADING_MODE g_shading_mode;      // <-- NEW
 
@@ -104,13 +125,19 @@ struct Shader_Phong : Shader {
 	void  prepare_shader() override;
 };
 
+/* 式式式 Spot-Phong (億 樁檜渦) 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式 */
+struct Shader_Spot_Phong : Shader {
+	GLint loc_ModelViewMatrix, loc_ModelViewMatrixInvTrans;
+	void  prepare_shader() override;
 
+};
 struct Shader_Data {
 	Shader_Simple shader_simple;
 	 Shader_Phong shader_phong;
 	 Shader_Gouraud shader_gouraud;
 	// Shader_Phong_Texture Shader_Phong_texture;
 	Shader_Phong_Texture  shader_phong_texture;
+	Shader_Spot_Phong    shader_spot_phong;
 };
 
 struct Material {
@@ -317,6 +344,9 @@ struct Scene {
 	GLenum g_cur_min_filter;
 	GLenum g_cur_mag_filter;
 
+	Light_Parameters  light[NUMBER_OF_LIGHTS_SUPPORTED];
+	loc_Light_Parameters loc_light[NUMBER_OF_LIGHTS_SUPPORTED];
+	GLint loc_global_ambient;
 
 	void set_user_filter(unsigned int id);
 

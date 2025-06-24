@@ -63,3 +63,23 @@ void Shader_Phong::prepare_shader() {
         "u_ModelViewMatrixInvTrans");
     glUseProgram(0);
 }
+
+
+/*  NEW: Spot-Phong  ------------------------------------------------- */
+void Shader_Spot_Phong::prepare_shader() {
+    shader_info[0] = { GL_VERTEX_SHADER,   "Shaders/spot_phong.vert" };
+    shader_info[1] = { GL_FRAGMENT_SHADER, "Shaders/spot_phong.frag" };
+    shader_info[2] = { GL_NONE, nullptr };
+
+    h_ShaderProgram = LoadShaders(shader_info);
+    glUseProgram(h_ShaderProgram);
+
+    loc_ModelViewProjectionMatrix =
+        glGetUniformLocation(h_ShaderProgram, "u_ModelViewProjectionMatrix");
+    loc_ModelViewMatrix =
+        glGetUniformLocation(h_ShaderProgram, "u_ModelViewMatrix");
+    loc_ModelViewMatrixInvTrans =
+        glGetUniformLocation(h_ShaderProgram, "u_ModelViewMatrixInvTrans");
+
+    glUseProgram(0);
+}

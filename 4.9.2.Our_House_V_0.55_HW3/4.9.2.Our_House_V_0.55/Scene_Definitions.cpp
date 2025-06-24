@@ -4,6 +4,18 @@
 #include "Camera.h"  
 #include "Texture_Helper.h"     // 파일 상단 include 목록에 추가
 
+/* ── 디버깅 매크로 ─────────────────────────────────────────── */
+#ifdef DEBUG_LIGHTS
+#define DBG(fmt, ...) fprintf(stderr,"[DBG] " fmt "\n", ##__VA_ARGS__)
+#define GL_CHECK()                                                         \
+    { GLenum err = glGetError();                                             \
+      if (err!=GL_NO_ERROR)                                                  \
+         fprintf(stderr,"[GL_ERROR] 0x%X @ %s:%d\n",err,__FILE__,__LINE__); }
+#else
+#define DBG(...)
+#define GL_CHECK()
+#endif
+
 
 Scene scene;
 
@@ -374,6 +386,11 @@ void Scene::build_shader_list() {
 	shader_data.shader_phong_texture.prepare_shader();
 	shader_ID_mapper[SHADER_PHONG_TEXUTRE] = shader_list.size();
 	shader_list.push_back(shader_data.shader_phong_texture);
+
+
+	shader_data.shader_spot_phong.prepare_shader();
+	shader_ID_mapper[SHADER_SPOT_PHONG] = shader_list.size();
+	shader_list.push_back(shader_data.shader_spot_phong);
 }
 
 
@@ -384,7 +401,7 @@ void Scene :: apply_user_filter()
 	GLint minF, magF;
 glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &minF);
 glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, &magF);
-printf("[TEX] MIN=0x%X  MAG=0x%X\n", minF, magF);
+//printf("[TEX] MIN=0x%X  MAG=0x%X\n", minF, magF);
 
 }
 /* -------------------------------------------------------------------- */
@@ -449,6 +466,39 @@ void Scene::initialize() {
 
 	load_png_to_texture("Data/static_objects/my_woodtower_diff.png",
 		texture_names[TEXTURE_ID_WOOD_TOWER], g_cur_filter);
+
+
+	// 0 : 월드 고정 점광원 (-400,400,-400)
+	light[0].light_on = 1;
+	light[0].position = { 200.f,25.f,9.f,1.f };
+	light[0].ambient = { 0.2,0.2,0.2,1 };
+	light[0].diffuse = { 0.8,0.8,0.8,1 };
+	light[0].specular = { 0.8,0.8,0.8,1 };
+	// 1 : 카메라 플래시(눈 좌표) – EC (0,0,10)
+	light[1].light_on = 0;
+	light[1].position = { 200,0,10,1 };
+	light[1].diffuse = { 1,1,0.9,1 };
+	light[1].specular = { 1,1,0.9,1 };
+	light[1].spot_dir = { 0,0,-1 };
+	light[1].spot_cut = 15.f;
+	light[1].spot_exp = 20.f;
+	// 2 : 늑대 헤드라이트 (모델 고정)
+	light[2].light_on = 0;
+	light[2].position = { 200,1.5f,1.0f,1 };   // 늑대 머리 앞 (MC)
+	light[2].diffuse = { 1,0.9,0.7,1 };
+	light[2].specular = { 1,0.9,0.7,1 };
+	light[2].spot_dir = { 0,0,-1 };
+	light[2].spot_cut = 20.f;
+	light[2].spot_exp = 15.f;
+
+	for (int i = 0; i < 3; ++i) {
+		const auto& L = light[i];
+		fprintf(stderr,
+			"[INIT] L%d on=%d  pos=(%.1f,%.1f,%.1f,%.1f)  cutoff=%.1f\n",
+			i, L.light_on, L.position.x, L.position.y, L.position.z, L.position.w,
+			L.spot_cut);
+	}
+
 }
 
 void Scene::draw_static_world() {
@@ -479,6 +529,29 @@ void Scene::draw_axis_with_model(const Camera& cam) {
 
 
 void Scene::draw_world() {
+
+	/* 월드 고정 라이트(0) */
+	glm::vec4 posEC = ViewMatrix * scene.light[0].position;
+	glUniform4fv(scene.loc_light[0].position, 1, &posEC[0]);
+	printf("[frame] L0 posEC=(%.1f,%.1f,%.1f) on=%d",
+		posEC.x, posEC.y, posEC.z, scene.light[0].light_on);
+
+	/* 눈 좌표 라이트(1) */
+	glUniform4fv(scene.loc_light[1].position, 1, &scene.light[1].position[0]);
+	printf("[frame] L1 (eye) posEC=(%.1f,%.1f,%.1f) on=%d",
+		scene.light[1].position.x, scene.light[1].position.y,
+		scene.light[1].position.z, scene.light[1].light_on);
+
+	/* 모델-고정 라이트(2) */
+	glm::mat4 M_wolf =
+		glm::translate(glm::mat4(1), g_wolf.pos) *
+		glm::rotate(glm::mat4(1), g_wolf.heading, glm::vec3(0, 0, 1));
+	posEC = ViewMatrix * M_wolf * scene.light[2].position;
+	glUniform4fv(scene.loc_light[2].position, 1, &posEC[0]);
+	printf("[frame] L2 (wolf) posEC=(%.1f,%.1f,%.1f) on=%d",
+		posEC.x, posEC.y, posEC.z, scene.light[2].light_on);
+
+
 	draw_axis();
 	if (show_camframe) {      
 		// 1 키로 토글
