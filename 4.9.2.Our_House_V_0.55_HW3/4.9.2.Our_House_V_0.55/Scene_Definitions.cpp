@@ -19,24 +19,22 @@ GLuint texture_names[N_MAX_TEXTURES] = { 0 };
 static GLenum g_cur_filter = GL_LINEAR;   // 디폴트는 Linear
 void Scene::set_user_filter(unsigned int id)
 {
-	/* ① 선택값을 전역에 보관 */
-	scene.g_cur_mag_filter = (id == 0) ? GL_NEAREST : GL_LINEAR;
-	scene.g_cur_min_filter = (id == 0) ? GL_NEAREST_MIPMAP_NEAREST
-		: GL_LINEAR_MIPMAP_LINEAR;
+	/* id == 0 : NEAREST  |  id == 1 : LINEAR */
+	g_cur_mag_filter = (id == 0) ? GL_NEAREST : GL_LINEAR;
+	g_cur_min_filter = g_cur_mag_filter;   // 밉맵 사용 안 함
 
-	/* ② 모든 사용자 텍스처에 즉시 적용 */
-	const GLuint pick[] = {
+	GLuint userTextures[] = {
 		texture_names[TEXTURE_ID_SPIDER],
 		texture_names[TEXTURE_ID_WOOD_TOWER]
 	};
-	for (GLuint tex : pick) {
+
+	for (GLuint tex : userTextures) {
 		glBindTexture(GL_TEXTURE_2D, tex);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, g_cur_min_filter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, g_cur_mag_filter);
 	}
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
-
 
 
 #define GL_CHECK                                                                             \

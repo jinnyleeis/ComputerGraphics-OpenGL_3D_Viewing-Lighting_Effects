@@ -159,7 +159,7 @@ void Spider_D::define_object() {
 		object_frames[i].tex_id = TEXTURE_ID_SPIDER;   // ← 추가
 
 		cur_MM = &(object_frames[i].instances.back().ModelMatrix);
-		*cur_MM = glm::scale(glm::mat4(1.0f), glm::vec3(7.40f));
+		*cur_MM = glm::scale(glm::mat4(1.0f), glm::vec3(12.40f));
 
 
 		cur_material = &(object_frames[i].instances.back().material);

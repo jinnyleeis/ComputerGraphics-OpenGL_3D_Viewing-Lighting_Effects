@@ -339,14 +339,19 @@ struct Scene {
 	static std::vector<WallRect> g_wall_rects;
 
 
-	Scene() {
+
+
+	Scene()
+		: g_cur_min_filter(GL_LINEAR)   // 초기값: LINEAR
+		, g_cur_mag_filter(GL_LINEAR)   // 초기값: LINEAR
+	{
 		time_stamp = 0;
 		static_objects.clear();
 		shader_list.clear();
 		shader_kind = SHADER_SIMPLE;
 		ViewMatrix = ProjectionMatrix = glm::mat4(1.0f);
-
 	}
+
 
 	void clock(int clock_id);
 	void build_static_world();
