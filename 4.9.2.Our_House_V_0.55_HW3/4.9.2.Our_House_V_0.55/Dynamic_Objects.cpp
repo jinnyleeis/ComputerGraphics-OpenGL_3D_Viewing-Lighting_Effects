@@ -340,13 +340,16 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 	Shader_Simple* sh_simple = nullptr;
 	Shader_Phong_Texture* sh_tx = nullptr;
 
-	if (eff == SHADER_PHONG_TEXUTRE)
+	if (eff == SHADER_PHONG_TEXUTRE) {
 		sh_tx = static_cast<Shader_Phong_Texture*>(
 			&shader_list[shader_ID_mapper[SHADER_PHONG_TEXUTRE]].get());
-	else
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, scene.g_cur_min_filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, scene.g_cur_mag_filter);
+	}
+	else {
 		sh_simple = static_cast<Shader_Simple*>(
 			&shader_list[shader_ID_mapper[SHADER_SIMPLE]].get());
-
+	}
 	/* 텍스처 오브젝트는 와이어 → 실-모드로 잠시 전환 */
 	GLint prevPoly[2];
 	if (eff == SHADER_PHONG_TEXUTRE) {

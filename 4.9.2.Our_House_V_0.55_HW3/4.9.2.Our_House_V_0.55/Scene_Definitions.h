@@ -295,6 +295,11 @@ struct Scene {
 
 	static const int floor_mask[H][W];
 
+
+	GLenum g_cur_min_filter;
+	GLenum g_cur_mag_filter;
+
+
 	void set_user_filter(unsigned int id);
 
 
