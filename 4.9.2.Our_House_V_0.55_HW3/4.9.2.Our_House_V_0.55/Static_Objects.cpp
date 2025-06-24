@@ -424,6 +424,12 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 	bool use_tex = (tex_id >= 0);
 	SHADER_ID eff = use_tex ? SHADER_PHONG_TEXUTRE : shader_kind;
 
+	GLint prevPoly[2];
+	if (tex_id >= 0) {
+		glGetIntegerv(GL_POLYGON_MODE, prevPoly);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+
 	for (size_t i = 0; i < instances.size(); ++i) {
 		const Instance& inst = instances[i];
 
@@ -459,6 +465,8 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3 * n_triangles);
 	}
+	if (tex_id >= 0)
+		glPolygonMode(GL_FRONT_AND_BACK, prevPoly[0]);
 
 	glBindVertexArray(0);
 	glUseProgram(0);
