@@ -461,6 +461,7 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 				&shader_list[shader_ID_mapper[SHADER_SIMPLE]].get());
 
 			glUseProgram(sh->h_ShaderProgram);
+			scene.upload_lights_to_current_prog();
 			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
 			glUniform3fv(sh->loc_primitive_color, 1, &inst.material.diffuse[0]);
 			break;
@@ -472,6 +473,8 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 				&shader_list[shader_ID_mapper[SHADER_GOURAUD]].get());
 
 			glUseProgram(sh->h_ShaderProgram);
+			scene.upload_lights_to_current_prog();
+
 			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
 			glUniformMatrix4fv(sh->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
 			glUniformMatrix3fv(sh->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
@@ -484,6 +487,8 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 				&shader_list[shader_ID_mapper[SHADER_PHONG]].get());
 
 			glUseProgram(sh->h_ShaderProgram);
+			scene.upload_lights_to_current_prog();
+
 			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
 			glUniformMatrix4fv(sh->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
 			glUniformMatrix3fv(sh->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
@@ -496,6 +501,8 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 				&shader_list[shader_ID_mapper[SHADER_PHONG_TEXUTRE]].get());
 
 			glUseProgram(sh->h_ShaderProgram);
+			scene.upload_lights_to_current_prog();
+
 			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
 			glUniformMatrix4fv(sh->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
 			glUniformMatrix3fv(sh->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);

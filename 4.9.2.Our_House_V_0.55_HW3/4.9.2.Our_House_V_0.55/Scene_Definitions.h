@@ -43,6 +43,8 @@ struct Light_Parameters {
 	glm::vec4 atten = { 1,0,0,0 };    // .w≠0 ⇒ no attenuation
 };
 
+
+
 struct loc_Light_Parameters {
 	GLint light_on, position;
 	GLint ambient, diffuse, specular;
@@ -397,8 +399,9 @@ struct Scene {
 		static_objects.clear();
 		shader_list.clear();
 		shader_kind = SHADER_SIMPLE;
+		//shader_kind = SHADER_SPOT_PHONG;
 		ViewMatrix = ProjectionMatrix = glm::mat4(1.0f);
-		g_shading_mode = SHADE_SIMPLE;       // <-- NEW
+	//	g_shading_mode = SHADE_SIMPLE;       // <-- NEW
 	}
 
 
@@ -416,6 +419,8 @@ struct Scene {
 	void update_main_camera_follow_wolf();
 	void draw_cam_frame(const Camera& cam);   // <-- 아래 1-B 구현
 	void apply_user_filter();
+	void upload_lights_to_current_prog();
+
 
 };
 

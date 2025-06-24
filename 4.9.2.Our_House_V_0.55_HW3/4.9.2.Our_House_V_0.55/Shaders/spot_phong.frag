@@ -70,7 +70,7 @@ void main() {
         if (sf == 0.0) continue;
 
         vec3  att = apply_attenuation(u_light[i].position.xyz - v_pos_EC,
-                                      u_light[i].attenuation);
+                                    u_light[i].attenuation);
 
         float LN = max(dot(N,L), 0.0);
         if (LN > 0.0) {

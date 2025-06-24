@@ -31,6 +31,42 @@ GLuint texture_names[N_MAX_TEXTURES] = { 0 };
 //static GLenum g_cur_filter = GL_LINEAR;   // 디폴트는 Linear
 static GLenum g_cur_filter = GL_NEAREST;   // 디폴트는 Linear
 
+
+/* ---------------------------------------------------- */
+/*  모든 라이트 uniform을 현재 바인드된 프로그램으로 전송  */
+/* ---------------------------------------------------- */
+void Scene::upload_lights_to_current_prog()
+{
+	GLint curProg = 0;
+	glGetIntegerv(GL_CURRENT_PROGRAM, &curProg);          // 현재 바인드된 쉐이더
+	if (!curProg) return;                                 // 안전 검사용
+
+	glUniform4fv(glGetUniformLocation(curProg, "u_global_ambient_color"),
+		1, &scene.light[0].ambient[0]);
+
+	for (int i = 0; i < NUMBER_OF_LIGHTS_SUPPORTED; ++i)
+	{
+		char buf[64];
+		/*  ⬇︎ 콤마 연산자를 ( ... ) 로 감싸서 ‘하나의 인자’ 로 만든다 */
+#define UL(name) (sprintf(buf, "u_light[%d]." name, i), \
+                           glGetUniformLocation(curProg, buf))
+
+		glUniform1i(UL("light_on"), scene.light[i].light_on);
+		glUniform4fv(UL("position"), 1, &scene.light[i].position[0]);
+		glUniform4fv(UL("ambient_color"), 1, &scene.light[i].ambient[0]);
+		glUniform4fv(UL("diffuse_color"), 1, &scene.light[i].diffuse[0]);
+		glUniform4fv(UL("specular_color"), 1, &scene.light[i].specular[0]);
+		glUniform3fv(UL("spot_direction"), 1, &scene.light[i].spot_dir[0]);
+		glUniform1f(UL("spot_exponent"), scene.light[i].spot_exp);
+		glUniform1f(UL("spot_cutoff"), scene.light[i].spot_cut);
+		glUniform4fv(UL("attenuation"), 1, &scene.light[i].atten[0]);
+
+#undef UL
+	}
+}
+
+
+
 void Scene::set_user_filter(unsigned int id)
 {
 	/* id == 0 : NEAREST  |  id == 1 : LINEAR */
@@ -470,13 +506,13 @@ void Scene::initialize() {
 
 	// 0 : 월드 고정 점광원 (-400,400,-400)
 	light[0].light_on = 1;
-	light[0].position = { 200.f,25.f,9.f,1.f };
+	light[0].position = { 120.0f, 100.0f, 49.0f,1.f };
 	light[0].ambient = { 0.2,0.2,0.2,1 };
 	light[0].diffuse = { 0.8,0.8,0.8,1 };
 	light[0].specular = { 0.8,0.8,0.8,1 };
 	// 1 : 카메라 플래시(눈 좌표) – EC (0,0,10)
 	light[1].light_on = 0;
-	light[1].position = { 200,0,10,1 };
+	light[1].position = { 120.0f, 100.0f, 49.0f,1 };
 	light[1].diffuse = { 1,1,0.9,1 };
 	light[1].specular = { 1,1,0.9,1 };
 	light[1].spot_dir = { 0,0,-1 };
@@ -484,7 +520,7 @@ void Scene::initialize() {
 	light[1].spot_exp = 20.f;
 	// 2 : 늑대 헤드라이트 (모델 고정)
 	light[2].light_on = 0;
-	light[2].position = { 200,1.5f,1.0f,1 };   // 늑대 머리 앞 (MC)
+	light[2].position = { 120.0f, 100.0f, 49.0f,1 };   // 늑대 머리 앞 (MC)
 	light[2].diffuse = { 1,0.9,0.7,1 };
 	light[2].specular = { 1,0.9,0.7,1 };
 	light[2].spot_dir = { 0,0,-1 };
