@@ -12,7 +12,7 @@ unsigned int static_object_ID_mapper[N_MAX_STATIC_OBJECTS];
 unsigned int dynamic_object_ID_mapper[N_MAX_DYNAMIC_OBJECTS];
 unsigned int camera_ID_mapper[N_MAX_CAMERAS];
 unsigned int shader_ID_mapper[N_MAX_SHADERS];
-
+SHADING_MODE g_shading_mode = SHADE_SIMPLE;
 
 GLuint texture_names[N_MAX_TEXTURES] = { 0 };
 

@@ -23,6 +23,10 @@
     </None>
     <None Include="Shaders\Phong_Tx.frag" />
     <None Include="Shaders\Phong_Tx.vert" />
+    <None Include="Shaders\gouraud.frag" />
+    <None Include="Shaders\gouraud.vert" />
+    <None Include="Shaders\phong.frag" />
+    <None Include="Shaders\phong.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="4.9.2.Our_House_V_0.55_main.cpp">
