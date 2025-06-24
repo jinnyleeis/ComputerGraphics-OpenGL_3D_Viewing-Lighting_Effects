@@ -18,14 +18,11 @@ GLuint texture_names[N_MAX_TEXTURES] = { 0 };
 
 static GLenum g_cur_filter = GL_LINEAR;   // 디폴트는 Linear
 
-void Scene::set_user_filter(unsigned int id){
-	/* 사용자 필터링 모드 설정 */
-	GLenum user_filter = GL_LINEAR;  // 디폴트는 Linear
-	if (id == 0) {
-		user_filter = GL_NEAREST;      // 0번은 Nearest
-	} else if (id == 1) {
-		user_filter = GL_LINEAR;       // 1번은 Linear
-	}
+void Scene::set_user_filter(unsigned int id)
+{
+	GLenum magF = (id == 0) ? GL_NEAREST : GL_LINEAR;
+	GLenum minF = (id == 0) ? GL_NEAREST_MIPMAP_NEAREST
+		: GL_LINEAR_MIPMAP_LINEAR;
 
 	const GLuint pick[] = {
 		texture_names[TEXTURE_ID_SPIDER],
@@ -33,11 +30,10 @@ void Scene::set_user_filter(unsigned int id){
 	};
 	for (GLuint tex : pick) {
 		glBindTexture(GL_TEXTURE_2D, tex);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,user_filter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, user_filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minF);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magF);
 	}
 }
-
 
 
 

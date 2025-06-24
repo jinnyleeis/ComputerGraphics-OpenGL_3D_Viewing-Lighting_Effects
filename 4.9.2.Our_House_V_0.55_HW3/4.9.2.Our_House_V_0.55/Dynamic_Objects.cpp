@@ -2,6 +2,7 @@
 
 #include "Scene_Definitions.h"
 #include <glm/gtc/constants.hpp> 
+#include <glm/gtc/matrix_inverse.hpp>   // 파일 맨 위
 
 
 
@@ -275,10 +276,15 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 	SHADER_ID  shader_kind,
 	std::vector<std::reference_wrapper<Shader>>& shader_list,
 	int time_stamp)
+
+
 {
 	/* ---------- (A) 프레임 & 공통 데이터 ---------- */
 	const int cur_idx = time_stamp % object_frames.size();
 	Static_Object& frm = object_frames[cur_idx];
+
+	const bool use_tex = (frm.tex_id >= 0);
+	const SHADER_ID eff = use_tex ? SHADER_PHONG_TEXUTRE : shader_kind;
 
 	glFrontFace(frm.front_face_mode);
 
@@ -331,51 +337,86 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 	}
 
 	/* ---------- (C) 렌더링 루틴 ---------- */
-	Shader_Simple* sh =
-		static_cast<Shader_Simple*>(&shader_list[shader_ID_mapper[shader_kind]].get());
+	Shader_Simple* sh_simple = nullptr;
+	Shader_Phong_Texture* sh_tx = nullptr;
 
-	const bool doBlend =
-		(object_id == DYNAMIC_OBJECT_ICOSAHEDRON) && scene.g_flag_ico_blend;
+	if (eff == SHADER_PHONG_TEXUTRE)
+		sh_tx = static_cast<Shader_Phong_Texture*>(
+			&shader_list[shader_ID_mapper[SHADER_PHONG_TEXUTRE]].get());
+	else
+		sh_simple = static_cast<Shader_Simple*>(
+			&shader_list[shader_ID_mapper[SHADER_SIMPLE]].get());
 
-	auto drawPass = [&](GLenum cullFace, int flagBlend, float alpha)
+	/* 텍스처 오브젝트는 와이어 → 실-모드로 잠시 전환 */
+	GLint prevPoly[2];
+	if (eff == SHADER_PHONG_TEXUTRE) {
+		glGetIntegerv(GL_POLYGON_MODE, prevPoly);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+
+	/* drawOne(cull, flagBlend, alpha) --------------------------------- */
+	auto drawOne = [&](GLenum cullFace, int flagBlend, float alpha)
 		{
 			glCullFace(cullFace);
 
 			for (size_t i = 0; i < frm.instances.size(); ++i) {
-				glm::mat4 MVP = ProjectionMatrix * ViewMatrix *
-					ModelMatrix * frm.instances[i].ModelMatrix;
+				const Instance& inst = frm.instances[i];
 
-				glUseProgram(sh->h_ShaderProgram);
-				glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
-				glUniform3fv(sh->loc_primitive_color, 1, &frm.instances[i].material.diffuse[0]);
-				glUniform1i(sh->loc_u_flag_blending, flagBlend);
-				glUniform1f(sh->loc_u_fragment_alpha, alpha);
+				glm::mat4 MV = ViewMatrix * ModelMatrix * inst.ModelMatrix;
+				glm::mat4 MVP = ProjectionMatrix * MV;
+				glm::mat3 MVN = glm::inverseTranspose(glm::mat3(MV));
+
+				if (eff == SHADER_PHONG_TEXUTRE) {
+					glUseProgram(sh_tx->h_ShaderProgram);
+					glUniformMatrix4fv(sh_tx->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
+					glUniformMatrix4fv(sh_tx->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
+					glUniformMatrix3fv(sh_tx->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
+
+					glActiveTexture(GL_TEXTURE0 + frm.tex_id);
+					glBindTexture(GL_TEXTURE_2D, texture_names[frm.tex_id]);
+					glUniform1i(sh_tx->loc_texture, frm.tex_id);
+				}
+				else {
+					glUseProgram(sh_simple->h_ShaderProgram);
+					glUniformMatrix4fv(sh_simple->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
+					glUniform3fv(sh_simple->loc_primitive_color, 1, &inst.material.diffuse[0]);
+					glUniform1i(sh_simple->loc_u_flag_blending, flagBlend);
+					glUniform1f(sh_simple->loc_u_fragment_alpha, alpha);
+				}
 
 				glBindVertexArray(frm.VAO);
 				glDrawArrays(GL_TRIANGLES, 0, 3 * frm.n_triangles);
 			}
 		};
+	/* ------------------------------------------------------------------ */
+
+	/* ① 투명 20-면체(icosahedron)만 두 번 그리기 */
+	const bool doBlend =
+		(object_id == DYNAMIC_OBJECT_ICOSAHEDRON) && scene.g_flag_ico_blend;
 
 	if (doBlend) {
-		/* --- 투명 20-면체: BACK → FRONT 두 번 그리기 --- */
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDepthMask(GL_FALSE);
 		glEnable(GL_CULL_FACE);
 
-		drawPass(GL_BACK, 1, scene.g_ico_alpha);   // 뒤면
-		drawPass(GL_FRONT, 1, scene.g_ico_alpha);   // 앞면
+		drawOne(GL_BACK, 1, scene.g_ico_alpha);
+		drawOne(GL_FRONT, 1, scene.g_ico_alpha);
 
-		/* 상태 원복 */
 		glDisable(GL_CULL_FACE);
 		glDepthMask(GL_TRUE);
 		glDisable(GL_BLEND);
 	}
 	else {
-		/* --- 일반 불투명 패스 --- */
-		glDisable(GL_CULL_FACE);
-		drawPass(GL_BACK, 0, 1.0f);
+		glDisable(GL_CULL_FACE);                // 일반 불투명 패스
+		drawOne(GL_BACK, 0, 1.0f);
 	}
+
+	/* --- 상태 복원 --- */
+	glBindVertexArray(0);
+	glUseProgram(0);
+	if (eff == SHADER_PHONG_TEXUTRE)
+		glPolygonMode(GL_FRONT_AND_BACK, prevPoly[0]);
 
 	/* 공통 마무리 */
 	glBindVertexArray(0);
