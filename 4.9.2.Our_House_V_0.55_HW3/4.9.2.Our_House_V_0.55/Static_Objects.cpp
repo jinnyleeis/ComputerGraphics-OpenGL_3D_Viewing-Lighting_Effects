@@ -492,6 +492,9 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
 			glUniformMatrix4fv(sh->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
 			glUniformMatrix3fv(sh->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
+			/* --- NEW: Kd ¾÷·Îµå -------------------------------- */
+			glUniform3fv(sh->loc_Kd, 1, &inst.material.diffuse[0]);
+		
 			break;
 		}
 

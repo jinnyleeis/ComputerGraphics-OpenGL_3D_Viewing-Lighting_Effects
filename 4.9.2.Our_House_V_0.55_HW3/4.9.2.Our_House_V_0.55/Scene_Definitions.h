@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,8 +39,8 @@ struct Light_Parameters {
 	glm::vec4 specular = { 0,0,0,1 };
 	glm::vec3 spot_dir = { 0,0,-1 };     // only for spot
 	float     spot_exp = 0.0f;
-	float     spot_cut = 180.0f;       // 180 ¢¡ no spot
-	glm::vec4 atten = { 1,0,0,0 };    // .w¡Á0 ¢¡ no attenuation
+	float     spot_cut = 180.0f;       // 180 â‡’ no spot
+	glm::vec4 atten = { 1,0,0,0 };    // .wâ‰ 0 â‡’ no attenuation
 };
 
 
@@ -50,7 +50,7 @@ struct loc_Light_Parameters {
 	GLint ambient, diffuse, specular;
 	GLint spot_dir, spot_exp, spot_cut, atten;
 };
-/* ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 enum STATIC_OBJECT_ID {
 	STATIC_OBJECT_BUILDING = 0, STATIC_OBJECT_TABLE,
@@ -69,12 +69,12 @@ enum DYNAMIC_OBJECT_ID {
 
 };
 
-/* »ç¿ëÀÚ-ÁöÁ¤ ÅØ½ºÃ³ ÀÎµ¦½º */
+/* ì‚¬ìš©ì-ì§€ì • í…ìŠ¤ì²˜ ì¸ë±ìŠ¤ */
 enum USER_TEXTURE_ID {
-	TEXTURE_ID_FLOOR = 0,        // ÀÌ¹Ì ¿¹Á¦¿¡¼­ »ç¿ë
-	TEXTURE_ID_SPIDER = 1,       // µ¿Àû ¿ÀºêÁ§Æ®
-	TEXTURE_ID_WOLF = 1,       // µ¿Àû ¿ÀºêÁ§Æ®
-	TEXTURE_ID_WOOD_TOWER = 2,   // Á¤Àû ¿ÀºêÁ§Æ®
+	TEXTURE_ID_FLOOR = 0,        // ì´ë¯¸ ì˜ˆì œì—ì„œ ì‚¬ìš©
+	TEXTURE_ID_SPIDER = 1,       // ë™ì  ì˜¤ë¸Œì íŠ¸
+	TEXTURE_ID_WOLF = 1,       // ë™ì  ì˜¤ë¸Œì íŠ¸
+	TEXTURE_ID_WOOD_TOWER = 2,   // ì •ì  ì˜¤ë¸Œì íŠ¸
 	N_USER_TEXTURES
 };
 extern GLuint texture_names[N_MAX_TEXTURES];
@@ -115,19 +115,20 @@ struct Shader_Phong_Texture : Shader {
 	void prepare_shader();
 };
 
-/* ¦¡¦¡¦¡ Gouraud per-vertex ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ */
+/* â”€â”€â”€ Gouraud per-vertex â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 struct Shader_Gouraud : Shader {
 	GLint loc_ModelViewMatrix, loc_ModelViewMatrixInvTrans;
 	void  prepare_shader() override;
 };
 
-/* ¦¡¦¡¦¡ Phong per-fragment ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ */
+/* â”€â”€â”€ Phong per-fragment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 struct Shader_Phong : Shader {
 	GLint loc_ModelViewMatrix, loc_ModelViewMatrixInvTrans;
+	GLint loc_Kd;        // ğŸ”¹ì¶”ê°€
 	void  prepare_shader() override;
 };
 
-/* ¦¡¦¡¦¡ Spot-Phong (»õ ¼ÎÀÌ´õ) ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ */
+/* â”€â”€â”€ Spot-Phong (ìƒˆ ì…°ì´ë”) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 struct Shader_Spot_Phong : Shader {
 	GLint loc_ModelViewMatrix, loc_ModelViewMatrixInvTrans;
 	void  prepare_shader() override;
@@ -179,13 +180,13 @@ struct Static_Object { // an object that does not move
 
 	std::vector<Instance> instances;
 	bool flag_valid;
-	int  tex_id = -1;            // ¡ç ÅØ½ºÃ³ ID (-1 ÀÌ¸é ºñÅØ½ºÃ³)
+	int  tex_id = -1;            // â† í…ìŠ¤ì²˜ ID (-1 ì´ë©´ ë¹„í…ìŠ¤ì²˜)
 
 	Static_Object() {
 		filename[0] = '\0';
-		vertices = nullptr;   // ¡Ú
-		n_fields = 0;         // ¡Ú
-		n_triangles = 0;         // ¡Ú
+		vertices = nullptr;   // â˜…
+		n_fields = 0;         // â˜…
+		n_triangles = 0;         // â˜…
 		VBO = VAO = 0;
 		flag_valid = false;
 	}
@@ -355,28 +356,28 @@ struct Scene {
 
 
 	bool show_axes = false;
-	bool show_camframe = false;   // (½Å±Ô) Ä«¸Ş¶ó ÇÁ·¹ÀÓ RGB
+	bool show_camframe = false;   // (ì‹ ê·œ) ì¹´ë©”ë¼ í”„ë ˆì„ RGB
 
-	bool   g_flag_ico_blend = false; // ¡®6' Åä±Û ¿©ºÎ¸¦ ³ªÅ¸³¿ 
-	float  g_ico_alpha = 0.5f; // 0.0~1.0 (¡®+¡¯,¡®-¡¯)
-	float  g_ico_angle = 0.0f; //  È¸Àü ´©Àû°¢
+	bool   g_flag_ico_blend = false; // â€˜6' í† ê¸€ ì—¬ë¶€ë¥¼ ë‚˜íƒ€ëƒ„ 
+	float  g_ico_alpha = 0.5f; // 0.0~1.0 (â€˜+â€™,â€˜-â€™)
+	float  g_ico_angle = 0.0f; //  íšŒì „ ëˆ„ì ê°
 
 
-	/* ¦¡¦¡ Mouse-driven wolf -------------------------------------------------- */
+	/* â”€â”€ Mouse-driven wolf -------------------------------------------------- */
 	struct WolfCtrl {
-		glm::vec3 pos = { 30.f, 30.f, 9.f };  // ÃÊ±â À§Ä¡
-		float     heading = glm::half_pi<float>();   // +Y ¹æÇâ
+		glm::vec3 pos = { 30.f, 30.f, 9.f };  // ì´ˆê¸° ìœ„ì¹˜
+		float     heading = glm::half_pi<float>();   // +Y ë°©í–¥
 	} g_wolf;
 
-	/*¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ ¸ŞÀÎ Ä«¸Ş¶ó Orbit ¦¡¦¡¦¡¦¡¦¡¦¡¦¡*/
+	/*â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ ë©”ì¸ ì¹´ë©”ë¼ Orbit â”€â”€â”€â”€â”€â”€â”€*/
 	struct CamOrbit {
-		float leftRight = 0.0f;  // A/D: ÁÂ¿ì µ¹·Áº¸±â
-		float upDown = 0.0f;  // W/S: À§/¾Æ·¡ º¸±â
-		float headTilt = 0.0f;  // Q/E: ¸Ó¸®(È­¸é) ±â¿ïÀÌ±â
-		float dist = 400.f;               // ´Á´ë±îÁö °Å¸®
+		float leftRight = 0.0f;  // A/D: ì¢Œìš° ëŒë ¤ë³´ê¸°
+		float upDown = 0.0f;  // W/S: ìœ„/ì•„ë˜ ë³´ê¸°
+		float headTilt = 0.0f;  // Q/E: ë¨¸ë¦¬(í™”ë©´) ê¸°ìš¸ì´ê¸°
+		float dist = 400.f;               // ëŠ‘ëŒ€ê¹Œì§€ ê±°ë¦¬
 	} g_orbit;
 	/* -------------------------------------------------------------------- */
-/*  WallRect : XY Æò¸é¿¡¼­ º® ÇÏ³ªÀÇ AABB                               */
+/*  WallRect : XY í‰ë©´ì—ì„œ ë²½ í•˜ë‚˜ì˜ AABB                               */
 /* -------------------------------------------------------------------- */
 	struct WallRect {
 		float minx, maxx, miny, maxy;
@@ -385,21 +386,21 @@ struct Scene {
 		}
 	};
 
-	/* º® AABB µéÀ» ´ã¾Æ µÑ Àü¿ª ÄÁÅ×ÀÌ³Ê */
+	/* ë²½ AABB ë“¤ì„ ë‹´ì•„ ë‘˜ ì „ì—­ ì»¨í…Œì´ë„ˆ */
 	static std::vector<WallRect> g_wall_rects;
 
 
 
 
 	Scene()
-		: g_cur_min_filter(GL_LINEAR)   // ÃÊ±â°ª: LINEAR
-		, g_cur_mag_filter(GL_LINEAR)   // ÃÊ±â°ª: LINEAR
+		: g_cur_min_filter(GL_LINEAR)   // ì´ˆê¸°ê°’: LINEAR
+		, g_cur_mag_filter(GL_LINEAR)   // ì´ˆê¸°ê°’: LINEAR
 	{
 		time_stamp = 0;
 		static_objects.clear();
 		shader_list.clear();
-		shader_kind = SHADER_SIMPLE;
-		//shader_kind = SHADER_SPOT_PHONG;
+		//shader_kind = SHADER_SIMPLE;
+		shader_kind = SHADER_PHONG;
 		ViewMatrix = ProjectionMatrix = glm::mat4(1.0f);
 	//	g_shading_mode = SHADE_SIMPLE;       // <-- NEW
 	}
@@ -417,7 +418,7 @@ struct Scene {
 	void draw_axis_with_model(const Camera& cam);
 	void draw_world();
 	void update_main_camera_follow_wolf();
-	void draw_cam_frame(const Camera& cam);   // <-- ¾Æ·¡ 1-B ±¸Çö
+	void draw_cam_frame(const Camera& cam);   // <-- ì•„ë˜ 1-B êµ¬í˜„
 	void apply_user_filter();
 	void upload_lights_to_current_prog();
 
