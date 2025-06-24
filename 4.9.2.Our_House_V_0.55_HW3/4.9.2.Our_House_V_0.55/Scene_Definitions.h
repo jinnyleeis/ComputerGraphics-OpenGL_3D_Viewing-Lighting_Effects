@@ -398,6 +398,7 @@ struct Scene {
 		static_objects.clear();
 		shader_list.clear();
 		shader_kind = SHADER_SIMPLE;
+		//  shader_kind = SHADER_SPOT_WORLD;  
 		ViewMatrix = ProjectionMatrix = glm::mat4(1.0f);
 		g_shading_mode = SHADE_SIMPLE;       // <-- NEW
 	}

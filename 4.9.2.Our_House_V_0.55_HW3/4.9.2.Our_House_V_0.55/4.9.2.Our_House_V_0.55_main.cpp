@@ -220,6 +220,7 @@ void display(void) {
 		else if (key == '3') {
 
 			g_flag_spot_on = !g_flag_spot_on;
+			
 		}
 
 
