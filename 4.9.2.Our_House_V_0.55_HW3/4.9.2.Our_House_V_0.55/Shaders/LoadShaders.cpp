@@ -2,36 +2,38 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <cstring>
 
 #include <GL/glew.h>
 #include "LoadShaders.h"
 
 //----------------------------------------------------------------------------
 
-GLchar* ReadShader(const char* filename) {
+GLchar* ReadShader(const char* filename)
+{
+	FILE* fp = fopen(filename, "rb");
+	if (!fp) { fprintf(stderr, "cannot open %s\n", filename); return nullptr; }
 
-	FILE* infile = fopen(filename, "rb");
+	fseek(fp, 0, SEEK_END);
+	long len = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
 
-	if (!infile) {
-#ifdef _DEBUG
-		fprintf(stdout, "Unable to open file '%s'\n", filename);
-#endif /* DEBUG */
-		return NULL;
+	GLchar* src = static_cast<GLchar*>(malloc(len + 1));
+	fread(src, 1, len, fp);
+	fclose(fp);
+
+	/* 式式 UTF-8 BOM 薯剪 式式 */
+	if (len >= 3 &&
+		static_cast<unsigned char>(src[0]) == 0xEF &&
+		static_cast<unsigned char>(src[1]) == 0xBB &&
+		static_cast<unsigned char>(src[2]) == 0xBF) {
+		memmove(src, src + 3, len - 3);
+		len -= 3;
 	}
-
-	fseek(infile, 0, SEEK_END);
-	int len = ftell(infile);
-	fseek(infile, 0, SEEK_SET);
-
-	GLchar* source = (GLchar*)malloc((len + 1) * sizeof(GLchar));
-
-	fread(source, 1, len, infile);
-	fclose(infile);
-
-	source[len] = 0;
-
-	return source;
+	src[len] = 0;
+	return src;
 }
+
 
 //----------------------------------------------------------------------------
 

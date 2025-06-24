@@ -54,11 +54,28 @@ void Static_Object::prepare_geom_of_static_object() {
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, n_bytes_per_vertex, BUFFER_OFFSET(0));
+
+	/* 위치 */
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+		n_bytes_per_vertex, (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	/* 법선 */
+	if (n_fields >= 6) {
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
+			n_bytes_per_vertex, (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+	}
+
+	/* 텍스처 좌표 */
+	if (n_fields == 8) {
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
+			n_bytes_per_vertex, (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+	}
+
 	glBindVertexArray(0);
+
 }
 
 void Building::define_object() {

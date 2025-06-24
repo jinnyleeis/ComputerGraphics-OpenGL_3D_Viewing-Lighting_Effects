@@ -15,8 +15,8 @@ void Shader_Simple::prepare_shader() {
 	glUseProgram(0);
 }
 
-/* 파일 맨 아래쪽에 추가 --------------------------------------------- */
-void Shader_Phong_Texture::prepare_shader() {
+void Shader_Phong_Texture::prepare_shader()
+{
 	shader_info[0] = { GL_VERTEX_SHADER,   "Shaders/Phong_Tx.vert" };
 	shader_info[1] = { GL_FRAGMENT_SHADER, "Shaders/Phong_Tx.frag" };
 	shader_info[2] = { GL_NONE, nullptr };
