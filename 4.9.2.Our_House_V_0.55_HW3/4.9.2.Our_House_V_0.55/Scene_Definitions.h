@@ -361,6 +361,7 @@ struct Scene {
 	void draw_world();
 	void update_main_camera_follow_wolf();
 	void draw_cam_frame(const Camera& cam);   // <-- 아래 1-B 구현
+	void apply_user_filter();
 
 };
 

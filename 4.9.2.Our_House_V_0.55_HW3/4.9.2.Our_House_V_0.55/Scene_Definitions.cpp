@@ -367,6 +367,12 @@ void Scene::build_shader_list() {
 	shader_list.push_back(shader_data.shader_phong_texture);
 
 }
+
+void Scene :: apply_user_filter()
+{
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, scene.g_cur_min_filter);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, scene.g_cur_mag_filter);
+}
 /* -------------------------------------------------------------------- */
 /*  Building1_vnt.geom ─> 벽 AABB 목록 추출                              */
 /* -------------------------------------------------------------------- */

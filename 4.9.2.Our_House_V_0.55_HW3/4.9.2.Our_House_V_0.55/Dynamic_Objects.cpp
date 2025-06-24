@@ -343,8 +343,7 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 	if (eff == SHADER_PHONG_TEXUTRE) {
 		sh_tx = static_cast<Shader_Phong_Texture*>(
 			&shader_list[shader_ID_mapper[SHADER_PHONG_TEXUTRE]].get());
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, scene.g_cur_min_filter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, scene.g_cur_mag_filter);
+	
 	}
 	else {
 		sh_simple = static_cast<Shader_Simple*>(
@@ -377,6 +376,9 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 
 					glActiveTexture(GL_TEXTURE0 + frm.tex_id);
 					glBindTexture(GL_TEXTURE_2D, texture_names[frm.tex_id]);
+
+					scene.apply_user_filter();
+
 					glUniform1i(sh_tx->loc_texture, frm.tex_id);
 				}
 				else {

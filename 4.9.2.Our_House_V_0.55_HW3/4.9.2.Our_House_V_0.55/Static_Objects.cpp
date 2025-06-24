@@ -458,6 +458,10 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 			/* 텍스처 바인딩 */
 			glActiveTexture(GL_TEXTURE0 + tex_id);
 			glBindTexture(GL_TEXTURE_2D, texture_names[tex_id]);
+
+			scene.apply_user_filter();
+
+
 			glUniform1i(sh->loc_texture, tex_id);
 		}
 		/* ---------------------------------------------------------------- */
