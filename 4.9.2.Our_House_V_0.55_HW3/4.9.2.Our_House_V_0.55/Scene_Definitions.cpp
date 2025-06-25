@@ -593,13 +593,50 @@ light[2].spot_exp   = 15.f;
 
 }
 
-void Scene::draw_static_world() {
-	glm::mat4 ModelViewProjectionMatrix;
-	for (auto static_object = static_objects.begin(); static_object != static_objects.end(); static_object++) {
-		if (static_object->get().flag_valid == false) continue;
-		static_object->get().draw_object(ViewMatrix, ProjectionMatrix, shader_kind, shader_list);
+/* ===============================================================
+ *  Scene_Definitions.cpp
+ *  draw_static_world()  –  우드타워 전용: Fill+양면+Depth OFF
+ * ===============================================================*/
+void Scene::draw_static_world()
+{
+	/* (1) 전역 상태 백업 ------------------------------------- */
+	GLint     prevPolyMode[2];   glGetIntegerv(GL_POLYGON_MODE, prevPolyMode);
+	GLboolean prevCullEnabled = glIsEnabled(GL_CULL_FACE);
+	GLboolean prevDepthEnabled = glIsEnabled(GL_DEPTH_TEST);
+	GLboolean prevDepthWrite;
+	glGetBooleanv(GL_DEPTH_WRITEMASK, &prevDepthWrite);
+
+	/* (2) 모든 정적 오브젝트 --------------------------------- */
+	for (auto& obj_ref : static_objects) {
+		Static_Object& obj = obj_ref.get();
+		if (!obj.flag_valid) continue;
+
+		const bool isWT = (obj.object_id == STATIC_OBJECT_WOOD_TOWER);
+
+		if (isWT) {
+			/* ─── 우드타워 한정 설정 ───────────────────── */
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);   // 항상 Fill
+			glDisable(GL_CULL_FACE);                     // 양면
+			glDisable(GL_DEPTH_TEST);                    // 깊이 읽기 X
+			glDepthMask(GL_FALSE);                       // 깊이 쓰기 X
+		}
+
+		obj.draw_object(ViewMatrix, ProjectionMatrix,
+			shader_kind, shader_list);
+
+		if (isWT) {
+			/* ─── 상태 완전 복원 ─────────────────────── */
+			glPolygonMode(GL_FRONT_AND_BACK, prevPolyMode[0]);
+			if (prevCullEnabled) glEnable(GL_CULL_FACE);
+			else                 glDisable(GL_CULL_FACE);
+
+			if (prevDepthEnabled) glEnable(GL_DEPTH_TEST);
+			else                  glDisable(GL_DEPTH_TEST);
+			glDepthMask(prevDepthWrite);
+		}
 	}
 }
+
 
 // Scene_Definitions.cpp
 void Scene::draw_dynamic_world() {

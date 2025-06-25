@@ -427,6 +427,8 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 	/* ---------- (1) 이 오브젝트에 적용할 최종 셰이더 결정 ---------------- */
 	const bool  has_tex = (tex_id >= 0);
 	bool        is_cat = (object_id == STATIC_OBJECT_CAT);          // ★ 고양이만 특수 처리
+	bool is_woodTower = (object_id == STATIC_OBJECT_WOOD_TOWER);
+
 
 	SHADER_ID eff;
 	if (has_tex)
@@ -447,6 +449,8 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 		glGetIntegerv(GL_POLYGON_MODE, prevPoly);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);                   // ★
 	}
+
+
 
 	/* ---------- (3) 모든 인스턴스 렌더링 -------------------------------- */
 	for (const Instance& inst : instances) {
@@ -545,8 +549,10 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 	}
 
 	/* ---------- (4) 상태 복원 ---------------------------------------- */
-	if (is_cat)
-		glPolygonMode(GL_FRONT_AND_BACK, prevPoly[0]);               // ★ 되돌리기
+	if (is_cat) {
+		glPolygonMode(GL_FRONT_AND_BACK, prevPoly[0]);
+	}
+	
 
 	glBindVertexArray(0);
 	glUseProgram(0);

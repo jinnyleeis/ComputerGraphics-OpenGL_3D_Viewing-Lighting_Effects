@@ -65,7 +65,7 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 	cam_proj.projection_type = CAMERA_PROJECTION_PERSPECTIVE;
 	cam_proj.params.pers.fovy = 15.0f * TO_RADIAN;
 	cam_proj.params.pers.aspect = win_aspect_ratio;
-	cam_proj.params.pers.n = 1.0f;
+	cam_proj.params.pers.n = 0.05f;
 	cam_proj.params.pers.f = 50000.0f;
 
 	switch (camera_id) {
