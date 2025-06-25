@@ -30,7 +30,10 @@ extern unsigned int dynamic_object_ID_mapper[N_MAX_DYNAMIC_OBJECTS];
 extern unsigned int camera_ID_mapper[N_MAX_CAMERAS];
 extern unsigned int shader_ID_mapper[N_MAX_SHADERS];
 
-#define NUMBER_OF_LIGHTS_SUPPORTED 4
+#define NUMBER_OF_LIGHTS_SUPPORTED 6   
+
+constexpr int WORLD_LIGHT_IDS[3] = { 0, 3, 4 };
+
 struct Light_Parameters {
 	int   light_on = 0;                  // 0: off, 1: on
 	glm::vec4 position = { 0,0,1,0 };    // WC or EC (w=1: point, w=0: dir)
@@ -405,7 +408,7 @@ struct Scene {
 		shader_list.clear();
 		//shader_kind = SHADER_SIMPLE;
 		//shader_kind = SHADER_PHONG;
-		shader_kind = SHADER_SPOT_PHONG;
+	    shader_kind = SHADER_SPOT_PHONG;
 
 		ViewMatrix = ProjectionMatrix = glm::mat4(1.0f);
 	//	g_shading_mode = SHADE_SIMPLE;       // <-- NEW

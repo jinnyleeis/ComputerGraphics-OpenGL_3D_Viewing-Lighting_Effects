@@ -504,12 +504,20 @@ void Scene::initialize() {
 		texture_names[TEXTURE_ID_WOOD_TOWER], g_cur_filter);
 
 
-	// 0 : 월드 고정 점광원 (-400,400,-400)
-	light[0].light_on = 1;
-	light[0].position = { 120.0f, 100.0f, 49.0f,1.f };
-	light[0].ambient = { 0.2,0.2,0.2,1 };
-	light[0].diffuse = { 0.8,0.8,0.8,1 };
-	light[0].specular = { 0.8,0.8,0.8,1 };
+	/* ---------- (A) 월드 고정 램프 3개 ---------- */
+	auto initWorld = [&](int idx, glm::vec3 pos) {
+		light[idx].light_on = 1;
+		light[idx].position = glm::vec4(pos, 1.0f);
+		light[idx].ambient = { 0.2f, 0.2f, 0.2f, 1 };
+		light[idx].diffuse = { 0.8f, 0.8f, 0.8f, 1 };
+		light[idx].specular = { 0.8f, 0.8f, 0.8f, 1 };
+		};
+	/*               중앙          서쪽        동쪽  */
+	initWorld(0, { 120,100,49 });
+	initWorld(3, { 40, 80,49 });
+	initWorld(4, { 200, 50,49 });
+
+
 	// 1 : 카메라 플래시(눈 좌표) – EC (0,0,10)
 	light[1].light_on = 0;
 	light[1].position = { 120.0f, 100.0f, 49.0f,1 };

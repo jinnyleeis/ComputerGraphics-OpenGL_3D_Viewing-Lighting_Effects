@@ -207,24 +207,38 @@ void display(void) {
 		if (key == '1')          g_shading_mode = SHADE_GOURAUD;
 		else if (key == '2')     g_shading_mode = SHADE_PHONG;
 
-		if (key == '3' || key == '4' || key == '5') {
-			int L = (key == '3') ? 0 : (key == '4') ? 1 : 2;
-			scene.light[L].light_on ^= 1;               // 토글
-			DBG("key='%c'  → light[%d].light_on=%d", key, L, scene.light[L].light_on);
+		/* ---------- 라이트 토글 ---------- */
+		if (key == '3') {                         // 월드 램프 3개 묶음
+			bool newState = !scene.light[0].light_on;
 
 			auto* sh = static_cast<Shader_Spot_Phong*>(
 				&scene.shader_list[shader_ID_mapper[SHADER_SPOT_PHONG]].get());
+
+			for (int idx : WORLD_LIGHT_IDS) {         // {0,3,4}
+				scene.light[idx].light_on = newState;
+				glUseProgram(sh->h_ShaderProgram);
+				glUniform1i(scene.loc_light[idx].light_on, newState);
+			}
+			glUseProgram(0);
+
+			/* 셰이더 전환 */
+			scene.shader_kind = newState ? SHADER_SPOT_PHONG
+				: SHADER_SIMPLE;
+			glutPostRedisplay();
+			return;
+		}
+
+		/* 4 : 카메라 플래시  |  5 : 늑대 헤드라이트 ----------------------- */
+		if (key == '4' || key == '5') {
+			auto* sh = static_cast<Shader_Spot_Phong*>(
+				&scene.shader_list[shader_ID_mapper[SHADER_SPOT_PHONG]].get());
+			int L = (key == '4') ? 1 : 2;              // 인덱스 매핑
+			scene.light[L].light_on ^= 1;
+
 			glUseProgram(sh->h_ShaderProgram);
 			glUniform1i(scene.loc_light[L].light_on, scene.light[L].light_on);
-
-#ifdef DEBUG_LIGHTS
-			GLint check = 0;
-			glGetUniformiv(sh->h_ShaderProgram, scene.loc_light[L].light_on, &check);
-			DBG("   uniform location=%d  value_in_GPU=%d",
-				scene.loc_light[L].light_on, check);
-#endif
 			glUseProgram(0);
-			GL_CHECK();
+
 			glutPostRedisplay();
 			return;
 		}
