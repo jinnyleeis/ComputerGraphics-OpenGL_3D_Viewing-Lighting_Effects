@@ -5,6 +5,8 @@ layout(location=0) out vec4 FragColor;
 
 
 uniform vec3 u_Kd;          // ‼ 확산 반사계수 (물체별)
+uniform int   u_flag_blending;
+uniform float u_fragment_alpha;
 
 
 void main() {
@@ -23,5 +25,7 @@ void main() {
     float NdotH = pow(max(dot(N,H),0.0), shin);
 
     vec3 color = Ka + Kd*NdotL + Ks*NdotH;
-    FragColor  = vec4(color,1.0);
+    float alpha = (u_flag_blending!=0) ? u_fragment_alpha : 1.0;
+
+FragColor    = vec4(color, alpha);
 }

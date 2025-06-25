@@ -29,6 +29,8 @@ struct MATERIAL {
 uniform LIGHT    u_light[MAX_L];
 uniform MATERIAL u_material;
 uniform vec4     u_global_ambient_color;
+uniform int   u_flag_blending;
+uniform float u_fragment_alpha;
 
 in  vec3 v_pos_EC;
 in  vec3 v_nrm_EC;
@@ -97,5 +99,6 @@ void main() {
              u_material.ambient_color;
     }
 
-    fragColor = C;
+    float alpha = (u_flag_blending!=0) ? u_fragment_alpha : 1.0;
+fragColor   = vec4(C.rgb, alpha);          // C 는 앞에서 계산한 vec4
 }

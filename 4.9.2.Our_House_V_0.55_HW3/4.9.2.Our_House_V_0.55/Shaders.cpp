@@ -66,6 +66,9 @@ void Shader_Phong::prepare_shader() {
 
     /* 🔹 Kd uniform 위치를 받아둔다 */
     loc_Kd = glGetUniformLocation(h_ShaderProgram, "u_Kd");
+    loc_u_flag_blending = glGetUniformLocation(h_ShaderProgram, "u_flag_blending");
+    loc_u_fragment_alpha = glGetUniformLocation(h_ShaderProgram, "u_fragment_alpha");
+
 
     /* (선택) Ka/Ks/shininess 도 필요하면 동일하게 glGetUniformLocation */
     glUseProgram(0);
@@ -93,6 +96,10 @@ void Shader_Spot_Phong::prepare_shader() {
     loc_mat_specular = glGetUniformLocation(h_ShaderProgram, "u_material.specular_color");
     loc_mat_emissive = glGetUniformLocation(h_ShaderProgram, "u_material.emissive_color");
     loc_mat_shininess = glGetUniformLocation(h_ShaderProgram, "u_material.specular_exp");
+
+    loc_u_flag_blending = glGetUniformLocation(h_ShaderProgram, "u_flag_blending");
+    loc_u_fragment_alpha = glGetUniformLocation(h_ShaderProgram, "u_fragment_alpha");
+
 
     glUseProgram(0);
 }

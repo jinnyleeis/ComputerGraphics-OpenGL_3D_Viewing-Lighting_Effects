@@ -216,14 +216,14 @@ void Wolf_D::define_object() {
 	}
 }
 
-/* ─────────────────────  20-면체 동적 오브젝트  ───────────────────── */
+/* ───────────────────── 20-면체 동적 오브젝트 ───────────────────── */
 void Icosahedron_D::define_object() {
 	/* ---- (1) 기하 생성 ---- */
 	static const float X = .5257311121f, Z = .8506508084f;
 	const GLfloat vdata[12][3] = {
-{-X,0,Z},{X,0,Z},{-X,0,-Z},{X,0,-Z},
-{0,Z,X},{0,Z,-X},{0,-Z,X},{0,-Z,-X},
-{Z,X,0},{-Z,X,0},{Z,-X,0},{-Z,-X,0}
+	   {-X,0,Z},{X,0,Z},{-X,0,-Z},{X,0,-Z},
+	   {0,Z,X},{0,Z,-X},{0,-Z,X},{0,-Z,-X},
+	   {Z,X,0},{-Z,X,0},{Z,-X,0},{-Z,-X,0}
 	};
 	const GLint tindices[20][3] = {
 		{0,4,1},{0,9,4},{9,5,4},{4,5,8},{4,8,1},
@@ -232,38 +232,51 @@ void Icosahedron_D::define_object() {
 		{6,1,10},{9,0,11},{9,11,2},{9,2,5},{7,2,11}
 	};
 
-	object_frames.emplace_back();          // 프레임 하나면 끝
-	
+	object_frames.emplace_back();
 	Static_Object& frm = object_frames.back();
-	/* (1) 메타데이터 설정 */
-	frm.filename[0] = '\0';   // ★ 파일 없음
-	frm.n_fields = 3;
+
+	/* (메타데이터) -------------------------------------------------- */
+	frm.filename[0] = '\0';
+	frm.n_fields = 6;          // 3 pos + 3 normal ❗
 	frm.front_face_mode = GL_CCW;
 	frm.object_id = STATIC_OBJECT_BUILDING;
 
-	/* (2) 버텍스 배열 생성 */
-	std::vector<float> verts;
-	verts.reserve(20 * 3 * 3);
+	/* (버텍스 배열) -------------------------------------------------- */
+	std::vector<float> verts;   verts.reserve(20 * 3 * 6);
 	for (int f = 0; f < 20; ++f)
-		for (int v = 0; v < 3; ++v)
-			for (int c = 0; c < 3; ++c)
-				verts.push_back(vdata[tindices[f][v]][c]);
+		for (int v = 0; v < 3; ++v) {
+			int idx = tindices[f][v];
+
+			/* 위치 */
+			glm::vec3 P(vdata[idx][0],
+				vdata[idx][1],
+				vdata[idx][2]);
+
+			/* 법선 = 정점 위치 정규화 */
+			glm::vec3 N = glm::normalize(P);
+
+			verts.insert(verts.end(),
+				{ P.x, P.y, P.z,   N.x, N.y, N.z });
+		}
 
 	frm.n_triangles = 20;
 	frm.vertices = (float*)malloc(verts.size() * sizeof(float));
 	memcpy(frm.vertices, verts.data(), verts.size() * sizeof(float));
 
-	/* (3) GPU 전송 – read_geometry()는 건너뜀 */
+	/* (GPU 전송) ---------------------------------------------------- */
 	frm.prepare_geom_of_static_object();
 
-	/* (4) 인스턴스 & 재질 */
+	/* (인스턴스 & 재질) --------------------------------------------- */
 	frm.instances.emplace_back();
 	frm.instances[0].ModelMatrix = glm::mat4(1.f);
+
 	auto& mat = frm.instances[0].material;
 	mat.diffuse = glm::vec4(0.0, 0.7, 1.0, 1.0);
-	mat.ambient = mat.specular = glm::vec4(0);
+	mat.ambient = glm::vec4(0);
+	mat.specular = glm::vec4(0);
+
 	flag_valid = true;
-};
+}
 
 
 
@@ -375,6 +388,8 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 				glUniformMatrix3fv(sh_phong->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
 				/* --- NEW: Kd 업로드 -------------------------------- */
 				glUniform3fv(sh_phong->loc_Kd, 1, &inst.material.diffuse[0]);
+				glUniform1i(sh_phong->loc_u_flag_blending, flagBlend);
+				glUniform1f(sh_phong->loc_u_fragment_alpha, alpha);
 				break;
 			}
 			case SHADER_SPOT_PHONG: {
@@ -389,6 +404,10 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 				glUniform4fv(sh_spot->loc_mat_specular, 1, &inst.material.specular[0]);
 				glUniform4fv(sh_spot->loc_mat_emissive, 1, &inst.material.emission[0]);
 				glUniform1f(sh_spot->loc_mat_shininess, inst.material.exponent);
+
+				glUniform1i(sh_spot->loc_u_flag_blending, flagBlend);
+				glUniform1f(sh_spot->loc_u_fragment_alpha, alpha);
+
 				break;
 			}
 			case SHADER_PHONG_TEXUTRE: {
