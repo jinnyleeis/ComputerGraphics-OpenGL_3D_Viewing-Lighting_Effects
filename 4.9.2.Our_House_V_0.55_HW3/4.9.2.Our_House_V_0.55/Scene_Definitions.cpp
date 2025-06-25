@@ -31,6 +31,55 @@ GLuint texture_names[N_MAX_TEXTURES] = { 0 };
 //static GLenum g_cur_filter = GL_LINEAR;   // 디폴트는 Linear
 static GLenum g_cur_filter = GL_NEAREST;   // 디폴트는 Linear
 
+struct PathSeg {
+	glm::vec3 from, to;
+	float     dur;          // milli-seconds
+};
+
+/* ───── 1. 공용 헬퍼 ───── */
+static inline bool is_walkable_xy(float x, float y) {
+	int gx = glm::clamp(int(x / 10.f), 0, Scene::W - 1);
+	int gy = glm::clamp(int(y / 10.f), 0, Scene::H - 1);
+	return Scene::floor_mask[gy][gx] == 0;
+}
+static glm::vec3 path_pos_dir(unsigned int t_ms,
+	const PathSeg* path, int n_seg,
+	glm::vec3* dir_out = nullptr) {
+	// 세그먼트 총 길이
+	float cycle = 0.f;
+	for (int i = 0; i < n_seg; i++) cycle += path[i].dur;
+
+	float t = fmodf(static_cast<float>(t_ms), cycle);
+
+	const PathSeg* seg = path;
+	while (t > seg->dur) { t -= seg->dur; ++seg; }
+
+	float u = t / seg->dur;                      // 0‥1
+	glm::vec3 pos = glm::mix(seg->from, seg->to, u);
+	glm::vec3 dir = glm::normalize(seg->to - seg->from);
+
+	if (dir_out) *dir_out = dir;
+	return pos;
+}
+
+/* ────────────────────────────────
+   늑대 1층 외곽 + 내부 복도 경로
+   ──────────────────────────────── */
+static const PathSeg TIGER_PATH[] = {
+
+
+	/* ── 안쪽 ㄷ자 복도 ───────────── */
+	{{ 30,  95,  0}, {155,  95,  0}, 1100},
+	{{155,  95,  0}, {155, 115,  0},  700},
+	{{155, 115,  0}, { 85, 115,  0},  800},
+	{{ 85, 115,  0}, { 85,  55,  0},  900},
+	{{ 85,  25,  0}, { 30,  25,  0}, 1000},
+	{{ 30,  25,  0}, { 40,  25,  0},  600}    // 출발점 복귀
+};
+static const int N_TIGER_SEG =
+sizeof(TIGER_PATH) / sizeof(PathSeg);
+
+
 
 /* ---------------------------------------------------- */
 /*  모든 라이트 uniform을 현재 바인드된 프로그램으로 전송  */
@@ -100,26 +149,9 @@ void Scene::set_user_filter(unsigned int id)
 
 
 
-struct PathSeg {
-	glm::vec3 from, to;
-	float     dur;          // milli-seconds
-};
 
-static const PathSeg WOLF_PATH[] = {
-	// 긴 복도를 시계 반대 방향으로 한 바퀴
-	  {{ 25,  25,  9}, {200,  25,  9}, 1200},  // 동쪽으로
-	  {{200,  25,  9}, {200, 145,  9}, 1400},  // 북쪽으로
-	  {{200, 145,  9}, { 40, 145,  9}, 1300},  // 서쪽으로
-	  {{ 40, 145,  9}, { 40,  80,  9},  900},  // 남쪽 → 안쪽 복도 진입
-	  {{ 40,  80,  9}, {140,  80,  9}, 1100},  // 동쪽
-	  {{140,  80,  9}, {140, 115,  9},  700},  // 북쪽
-	  {{140, 115,  9}, { 90, 115,  9},  800},  // 서쪽
-	  {{ 90, 115,  9}, { 90,  55,  9},  900},  // 남쪽
-	  {{ 90,  55,  9}, { 25,  55,  9}, 1000},  // 서쪽
-	  {{ 25,  55,  9}, { 25,  25,  9},  600}   // 남쪽 → 출발점
-};
 
-static const int N_WOLF_SEG = sizeof(WOLF_PATH) / sizeof(PathSeg);
+
 
 /* 거미: 수직·수평을 섞은 3-D 경로 (그림의 중앙 기둥 → 천장 → 관람 통로) */
 static const PathSeg SPIDER_PATH[] = {
@@ -526,14 +558,15 @@ void Scene::initialize() {
 	light[1].spot_dir = { 0,0,-1 };
 	light[1].spot_cut = 15.f;
 	light[1].spot_exp = 20.f;
-	// 2 : 늑대 헤드라이트 (모델 고정)
-	light[2].light_on = 0;
-	light[2].position = { 120.0f, 100.0f, 49.0f,1 };   // 늑대 머리 앞 (MC)
-	light[2].diffuse = { 1,0.9,0.7,1 };
-	light[2].specular = { 1,0.9,0.7,1 };
-	light[2].spot_dir = { 0,0,-1 };
-	light[2].spot_cut = 20.f;
-	light[2].spot_exp = 15.f;
+// 2 : 타이거 스포트라이트
+light[2].light_on   = 0;              // ‘5’ 키로 토글
+light[2].position   = { 0,1,0,1 };  // MC 좌표 (위에서 다시 변환됨)
+light[2].diffuse    = { 1,0.9,0.7,1 };
+light[2].specular   = { 1,0.9,0.7,1 };
+light[2].spot_dir   = { 0,1,-0.3 };   // MC 기준
+light[2].spot_cut   = 60.f;
+light[2].spot_exp   = 15.f;
+
 
 	for (int i = 0; i < 3; ++i) {
 		const auto& L = light[i];
@@ -553,13 +586,46 @@ void Scene::draw_static_world() {
 	}
 }
 
+// Scene_Definitions.cpp
 void Scene::draw_dynamic_world() {
-	glm::mat4 ModelViewProjectionMatrix;
-	for (auto dynamic_object = dynamic_objects.begin(); dynamic_object != dynamic_objects.end(); dynamic_object++) {
-		if (dynamic_object->get().flag_valid == false) continue;
-		dynamic_object->get().draw_object(ViewMatrix, ProjectionMatrix, shader_kind, shader_list, time_stamp);
+	/* ① 먼저 타이거의 모델행렬을 계산 – Dynamic_Objects와 동일한 식 */
+	unsigned int t_ms = glutGet(GLUT_ELAPSED_TIME);
+
+	glm::vec3 dir, posMC = path_pos_dir(t_ms,
+		TIGER_PATH, N_TIGER_SEG, &dir);
+	float heading = atan2f(dir.y, dir.x);
+
+	glm::mat4 M_tiger =
+		glm::translate(glm::mat4(1.f), posMC) *
+		glm::rotate(glm::mat4(1.f),
+			heading + glm::half_pi<float>(),
+			glm::vec3(0, 0, 1));
+
+	/* ②  모델좌표계 기준 라이트 원점·방향 정의  */
+	const glm::vec4 Lpos_MC(0.f, 12.f, 25.f, 1.f);   // 호랑이 머리 위
+	const glm::vec3 Ldir_MC(0.f, 1.f, -0.3f);       // 살짝 아래를 비춤
+
+	/* ③ EC 변환 */
+	glm::vec4 pos_EC = ViewMatrix * M_tiger * Lpos_MC;
+	glm::vec3 dir_EC = glm::mat3(ViewMatrix * M_tiger) * Ldir_MC;
+
+	/* ④ spot-Phong 셰이더에 uniform 업로드 */
+	auto* sh = static_cast<Shader_Spot_Phong*>(
+		&shader_list[shader_ID_mapper[SHADER_SPOT_PHONG]].get());
+
+	glUseProgram(sh->h_ShaderProgram);
+	glUniform4fv(loc_light[2].position, 1, &pos_EC.x);
+	glUniform3fv(loc_light[2].spot_dir, 1, &dir_EC.x);
+	glUseProgram(0);
+
+	/* ⑤ 원래 하던 것처럼 모든 동적 오브젝트 그리기 */
+	for (auto& dobj_ref : dynamic_objects) {
+		if (!dobj_ref.get().flag_valid) continue;
+		dobj_ref.get().draw_object(ViewMatrix, ProjectionMatrix,
+			shader_kind, shader_list, time_stamp);
 	}
 }
+
 
 void Scene::draw_axis() {
 	axis_object.draw_axis(static_cast<Shader_Simple*>(&shader_list[shader_ID_mapper[SHADER_SIMPLE]].get()),
@@ -586,14 +652,7 @@ void Scene::draw_world() {
 		scene.light[1].position.x, scene.light[1].position.y,
 		scene.light[1].position.z, scene.light[1].light_on);
 
-	/* 모델-고정 라이트(2) */
-	glm::mat4 M_wolf =
-		glm::translate(glm::mat4(1), g_wolf.pos) *
-		glm::rotate(glm::mat4(1), g_wolf.heading, glm::vec3(0, 0, 1));
-	posEC = ViewMatrix * M_wolf * scene.light[2].position;
-	glUniform4fv(scene.loc_light[2].position, 1, &posEC[0]);
-	printf("[frame] L2 (wolf) posEC=(%.1f,%.1f,%.1f) on=%d",
-		posEC.x, posEC.y, posEC.z, scene.light[2].light_on);
+	
 
 
 	draw_axis();
