@@ -543,10 +543,14 @@ void Scene::initialize() {
 		light[idx].ambient = { 0.2f, 0.2f, 0.2f, 1 };
 		light[idx].diffuse = { 0.8f, 0.8f, 0.8f, 1 };
 		light[idx].specular = { 0.8f, 0.8f, 0.8f, 1 };
+
+		light[idx].spot_dir = { 0,0,-1 };
+		light[idx].spot_cut = 30.f;
+		light[idx].spot_exp = 20.f;
 		};
 	/*               중앙          서쪽        동쪽  */
 	initWorld(0, { 120,100,49 });
-	initWorld(3, { 40, 80,49 });
+	initWorld(3, { 0, 40,49 });
 	initWorld(4, { 200, 50,49 });
 
 
@@ -558,13 +562,16 @@ void Scene::initialize() {
 	light[1].spot_dir = { 0,0,-1 };
 	light[1].spot_cut = 15.f;
 	light[1].spot_exp = 20.f;
+
+
+
 // 2 : 타이거 스포트라이트
 light[2].light_on   = 0;              // ‘5’ 키로 토글
-light[2].position   = { 0,0,0,1 };  // MC 좌표 (위에서 다시 변환됨)
+light[2].position   = { 0,0,30,1 };  // MC 좌표 (위에서 다시 변환됨)
 light[2].diffuse    = { 1,0.9,0.7,1 };
 light[2].specular   = { 1,0.9,0.7,1 };
-light[2].spot_dir   = { 0,1,-0.3 };   // MC 기준
-light[2].spot_cut   = 30.f;
+light[2].spot_dir   = { 0,0,-1 };   // MC 기준
+light[2].spot_cut   = 20.f;
 light[2].spot_exp   = 15.f;
 
 
