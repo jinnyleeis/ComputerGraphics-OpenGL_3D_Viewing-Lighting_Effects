@@ -243,7 +243,18 @@ void display(void) {
 			return;
 		}
 
-
+		if (key == '7') {    // 드래곤 Dissolve
+			g_flag_dissolve = !g_flag_dissolve;
+			printf("[DISSOLVE] %s\n", g_flag_dissolve ? "ON" : "OFF");
+			glutPostRedisplay();
+			return;
+		}
+		if (key == '8') {     // 아이언맨 Fresnel-Neon
+			g_flag_fresnel = !g_flag_fresnel;
+			printf("[FRESNEL]  %s\n", g_flag_fresnel ? "ON" : "OFF");
+			glutPostRedisplay();
+			return;
+		}
 
 		// 1) ESC
 		if (key == 27) {

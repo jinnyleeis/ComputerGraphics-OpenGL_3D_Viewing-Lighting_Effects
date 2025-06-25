@@ -135,6 +135,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="Shaders\lava.frag" />
+    <None Include="Shaders\lava.vert" />
+    <None Include="Shaders\fresnel.frag" />
+    <None Include="Shaders\fresnel.vert" />
     <None Include="Shaders\gouraud.frag" />
     <None Include="Shaders\gouraud.vert" />
     <None Include="Shaders\phong.frag" />

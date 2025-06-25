@@ -247,11 +247,12 @@ void Dragon ::define_object() {
 		strcpy(filename, "Data/static_objects/dragon_vnt.geom");
 		n_fields = 8;  front_face_mode = GL_CCW;
 		prepare_geom_of_static_object();  flag_valid = true;
+		tex_id = TEXTURE_ID_DRAGON_LAVA;
 
 		instances.emplace_back();
 		M = &instances.back().ModelMatrix;
 		*M = glm::translate(glm::mat4(1.0f), glm::vec3(157.0f, 76.5f, 40.0f));
-		*M = glm::scale(*M, glm::vec3(0.3f));
+		*M = glm::scale(*M, glm::vec3(1.0f));
 		*M = glm::rotate(*M, -180.0f * TO_RADIAN, glm::vec3(0.0f, 1.0f, 0.0f));
 		*M = glm::scale(*M, glm::vec3(1.0f,1.0f,-1.0f));
 		mat = &instances.back().material;
@@ -443,6 +444,20 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 	else
 		eff = default_shader;                                        // 기타 오브젝트
 
+	bool is_ironman = (object_id == STATIC_OBJECT_IRONMAN);
+
+	/* ① “효과 활성+해당 오브젝트” → 전용 셰이더 */
+	
+    if (is_ironman && g_flag_fresnel) eff = SHADER_NEON_FRESNEL;
+	/* ② 나머지는 기존 로직(eff 결정) 그대로 */
+
+	bool is_dragon = (object_id == STATIC_OBJECT_DRAGON);
+
+	if (is_dragon && g_flag_dissolve)          /* 7-키 토글 */
+		eff = SHADER_LAVA;
+
+
+
 	/* ---------- (2) 고양이는 항상 폴리곤-FILL로 강제 -------------------- */
 	GLint prevPoly[2] = { GL_FILL, GL_FILL };
 	if (is_cat) {
@@ -540,6 +555,54 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
 			glUniform1f(sh->loc_mat_shininess, inst.material.exponent);
 			break;
 		}
+							  /* (e) DISSOLVE ─ DRAGON ---------------------------------- */
+		case SHADER_LAVA: {
+			auto* sh = static_cast<Shader_Lava*>(
+				&shader_list[shader_ID_mapper[SHADER_LAVA]].get());
+			glUseProgram(sh->h_ShaderProgram);
+
+			/* MV / MVP */
+			glm::mat4 MV = ViewMatrix * inst.ModelMatrix;
+			glm::mat4 MVP = ProjectionMatrix * MV;
+			glUniformMatrix4fv(sh->loc_MVP, 1, GL_FALSE, &MVP[0][0]);
+			glUniformMatrix4fv(sh->loc_MV, 1, GL_FALSE, &MV[0][0]);
+
+			/* 시간 · 파라미터 */
+			float tSec = glutGet(GLUT_ELAPSED_TIME) * 0.001f;
+			glUniform1f(sh->loc_time, tSec);
+			glUniform2f(sh->loc_uParams, 6.0f, 1.2f);
+			glUniform2f(sh->loc_vParams, 3.0f, 1.6f);
+
+			/* 라바 텍스처 바인딩 */
+			glActiveTexture(GL_TEXTURE0 + TEXTURE_ID_DRAGON_LAVA);
+			glBindTexture(GL_TEXTURE_2D, texture_names[TEXTURE_ID_DRAGON_LAVA]);
+			scene.apply_user_filter();
+			glUniform1i(sh->loc_tex, TEXTURE_ID_DRAGON_LAVA);
+			break;
+		}
+
+
+							/* (f) FRESNEL-NEON ─ IRONMAN ------------------------------ */
+		case SHADER_NEON_FRESNEL: {
+			auto* sh = static_cast<Shader_FresnelNeon*>(
+				&shader_list[shader_ID_mapper[SHADER_NEON_FRESNEL]].get());
+			glUseProgram(sh->h_ShaderProgram);
+
+			float tSec = glutGet(GLUT_ELAPSED_TIME) * 0.001f;
+
+			glm::mat4 MV = ViewMatrix * inst.ModelMatrix;
+			glm::mat4 MVP = ProjectionMatrix * MV;
+			glm::mat3 MVN = glm::inverseTranspose(glm::mat3(MV));
+
+			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
+			glUniformMatrix4fv(sh->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
+			glUniformMatrix3fv(sh->loc_MVN, 1, GL_FALSE, &MVN[0][0]);
+			glUniform1f(sh->loc_time, tSec);
+			/* 네온-블루 */
+			glUniform3f(sh->loc_emissionColor, 0.0f, 1.5f, 3.0f);
+			break;
+		}
+
 
 		} /* switch */
 

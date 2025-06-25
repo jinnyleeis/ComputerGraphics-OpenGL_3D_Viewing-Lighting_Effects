@@ -103,3 +103,25 @@ void Shader_Spot_Phong::prepare_shader() {
 
     glUseProgram(0);
 }
+
+/* ─── Lava(Lysergic) Shader ───────────────────── */
+void Shader_Lava :: prepare_shader(){
+
+
+        shader_info[0] = { GL_VERTEX_SHADER,   "Shaders/lava.vert" };
+        shader_info[1] = { GL_FRAGMENT_SHADER, "Shaders/lava.frag" };
+        shader_info[2] = { GL_NONE, nullptr };
+
+        h_ShaderProgram = LoadShaders(shader_info);
+        glUseProgram(h_ShaderProgram);
+
+        loc_MVP = glGetUniformLocation(h_ShaderProgram, "u_MVP");
+        loc_MV = glGetUniformLocation(h_ShaderProgram, "u_MV");
+        loc_time = glGetUniformLocation(h_ShaderProgram, "u_time");
+        loc_uParams = glGetUniformLocation(h_ShaderProgram, "u_uParams");
+        loc_vParams = glGetUniformLocation(h_ShaderProgram, "u_vParams");
+        loc_tex = glGetUniformLocation(h_ShaderProgram, "u_mainTex");
+
+        glUseProgram(0);
+    
+};

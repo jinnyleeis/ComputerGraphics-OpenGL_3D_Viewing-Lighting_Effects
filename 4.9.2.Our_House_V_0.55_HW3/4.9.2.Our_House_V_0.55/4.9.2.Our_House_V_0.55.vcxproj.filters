@@ -29,6 +29,10 @@
     <None Include="Shaders\phong.vert" />
     <None Include="Shaders\spot_phong.frag" />
     <None Include="Shaders\spot_phong.vert" />
+    <None Include="Shaders\lava.frag" />
+    <None Include="Shaders\lava.vert" />
+    <None Include="Shaders\fresnel.frag" />
+    <None Include="Shaders\fresnel.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="4.9.2.Our_House_V_0.55_main.cpp">

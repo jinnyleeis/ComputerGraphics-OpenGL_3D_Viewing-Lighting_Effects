@@ -78,15 +78,20 @@ enum USER_TEXTURE_ID {
 	TEXTURE_ID_SPIDER = 1,       // 동적 오브젝트
 	TEXTURE_ID_WOLF = 1,       // 동적 오브젝트
 	TEXTURE_ID_WOOD_TOWER = 2,   // 정적 오브젝트
+	TEXTURE_ID_DRAGON_LAVA,
 	N_USER_TEXTURES
 };
 extern GLuint texture_names[N_MAX_TEXTURES];
 
 enum SHADER_ID { SHADER_SIMPLE = 0, SHADER_GOURAUD, SHADER_PHONG, SHADER_PHONG_TEXUTRE, SHADER_SPOT_PHONG,
+	SHADER_LAVA,             //  ← NEW (7번 : 드래곤)
+	SHADER_NEON_FRESNEL           //  ← NEW (8번 : 아이언맨)
 };
 enum SHADING_MODE { SHADE_SIMPLE = 0, SHADE_GOURAUD, SHADE_PHONG };
 extern SHADING_MODE g_shading_mode;      // <-- NEW
-
+/* ───────── 효과 토글 플래그 ────────── */
+extern bool g_flag_dissolve;      // ‘7’ key
+extern bool g_flag_fresnel;       // ‘8’ key
 
 struct Shader {
 	ShaderInfo shader_info[3];
@@ -141,6 +146,35 @@ struct Shader_Spot_Phong : Shader {
 	void  prepare_shader() override;
 
 };
+
+
+struct Shader_Lava : Shader {
+	GLint loc_MVP, loc_MV, loc_time;
+	GLint loc_uParams, loc_vParams, loc_tex;
+	void prepare_shader() override;
+};
+
+struct Shader_FresnelNeon : Shader {
+	GLint loc_ModelViewProjectionMatrix, loc_ModelViewMatrix, loc_MVN;
+	GLint loc_time, loc_emissionColor;
+	void prepare_shader() override {
+		shader_info[0] = { GL_VERTEX_SHADER,   "Shaders/fresnel.vert" };
+		shader_info[1] = { GL_FRAGMENT_SHADER, "Shaders/fresnel.frag" };
+		shader_info[2] = { GL_NONE, nullptr };
+
+		h_ShaderProgram = LoadShaders(shader_info);
+		glUseProgram(h_ShaderProgram);
+		loc_ModelViewProjectionMatrix = glGetUniformLocation(h_ShaderProgram, "u_MVP");
+		loc_ModelViewMatrix = glGetUniformLocation(h_ShaderProgram, "u_MV");
+		loc_MVN = glGetUniformLocation(h_ShaderProgram, "u_MVN");
+		loc_time = glGetUniformLocation(h_ShaderProgram, "u_time");
+		loc_emissionColor = glGetUniformLocation(h_ShaderProgram, "u_emiCol");
+		glUseProgram(0);
+	}
+};
+
+
+
 struct Shader_Data {
 	Shader_Simple shader_simple;
 	 Shader_Phong shader_phong;
@@ -148,6 +182,8 @@ struct Shader_Data {
 	// Shader_Phong_Texture Shader_Phong_texture;
 	Shader_Phong_Texture  shader_phong_texture;
 	Shader_Spot_Phong    shader_spot_phong;
+	Shader_Lava          shader_lava;   
+	Shader_FresnelNeon shader_neon_fres;
 };
 
 struct Material {

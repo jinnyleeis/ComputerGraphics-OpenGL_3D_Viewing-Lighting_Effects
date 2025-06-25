@@ -376,7 +376,7 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 	}
 	case DYNAMIC_OBJECT_ICOSAHEDRON: {
 		static float theta = 0.0f; theta += 0.5f * TO_RADIAN;
-		const glm::vec3 POS = { 125.f, 80.f, 60.f }; const float SCALE = 25.f;
+		const glm::vec3 POS = { 125.f, 80.f, 60.f }; const float SCALE = 15.f;
 		ModelMatrix = glm::translate(glm::mat4(1.f), POS) *
 			glm::rotate(glm::mat4(1.f), theta, glm::vec3(0, 1, 0)) *
 			glm::rotate(glm::mat4(1.f), theta * 0.7f, glm::vec3(1, 0, 1)) *

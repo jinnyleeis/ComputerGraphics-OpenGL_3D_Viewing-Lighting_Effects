@@ -30,6 +30,9 @@ GLuint texture_names[N_MAX_TEXTURES] = { 0 };
 
 //static GLenum g_cur_filter = GL_LINEAR;   // 디폴트는 Linear
 static GLenum g_cur_filter = GL_NEAREST;   // 디폴트는 Linear
+/* Scene_Definitions.cpp – 전역 변수 정의 */
+bool g_flag_dissolve = false;
+bool g_flag_fresnel = false;
 
 struct PathSeg {
 	glm::vec3 from, to;
@@ -466,6 +469,17 @@ void Scene::build_shader_list() {
 	shader_data.shader_spot_phong.prepare_shader();
 	shader_ID_mapper[SHADER_SPOT_PHONG] = shader_list.size();
 	shader_list.push_back(shader_data.shader_spot_phong);
+
+
+
+	shader_data.shader_lava.prepare_shader();          // NEW
+	shader_ID_mapper[SHADER_LAVA] = shader_list.size();
+	shader_list.push_back(shader_data.shader_lava);
+
+
+	shader_data.shader_neon_fres.prepare_shader();       // NEW
+	shader_ID_mapper[SHADER_NEON_FRESNEL] = shader_list.size();
+	shader_list.push_back(shader_data.shader_neon_fres);
 }
 
 
@@ -541,6 +555,9 @@ void Scene::initialize() {
 
 	load_png_to_texture("Data/static_objects/my_woodtower_diff.png",
 		texture_names[TEXTURE_ID_WOOD_TOWER], g_cur_filter);
+
+	load_png_to_texture("Data/static_objects/my_lava_ring.png",
+		texture_names[TEXTURE_ID_DRAGON_LAVA], g_cur_filter);
 
 
 	/* ---------- (A) 월드 고정 램프 3개 ---------- */
