@@ -564,7 +564,7 @@ light[2].position   = { 0,1,0,1 };  // MC 좌표 (위에서 다시 변환됨)
 light[2].diffuse    = { 1,0.9,0.7,1 };
 light[2].specular   = { 1,0.9,0.7,1 };
 light[2].spot_dir   = { 0,1,-0.3 };   // MC 기준
-light[2].spot_cut   = 60.f;
+light[2].spot_cut   = 30.f;
 light[2].spot_exp   = 15.f;
 
 

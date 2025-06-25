@@ -267,69 +267,81 @@ void Icosahedron_D::define_object() {
 
 
 
-
-
-/* ============================================================
-   Dynamic_Object::draw_object
-   ============================================================ */
 void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 	glm::mat4& ProjectionMatrix,
 	SHADER_ID  shader_kind,
 	std::vector<std::reference_wrapper<Shader>>& shader_list,
 	int time_stamp)
-
-
 {
-	/* ---------- (A) 프레임 & 공통 데이터 ---------- */
+	/* ---------- (A) 현재 프레임 데이터 ---------- */
 	const int cur_idx = time_stamp % object_frames.size();
 	Static_Object& frm = object_frames[cur_idx];
 
 	const bool use_tex = (frm.tex_id >= 0);
-	const SHADER_ID eff = use_tex ? SHADER_PHONG_TEXUTRE : shader_kind;
 
-	glFrontFace(frm.front_face_mode);
+	/* ---------- (B) 최종 사용할 셰이더 결정 ---------- */
+	SHADER_ID eff;
+	if (use_tex)
+		eff = SHADER_PHONG_TEXUTRE;       // 텍스처 → Phong+Texture 고정
+	else
+		eff = shader_kind;               // 나머지는 Scene이 지정 (PHONG ↔ SPOT_PHONG)
 
-	const unsigned int t_ms = glutGet(GLUT_ELAPSED_TIME);
+	/* 항상 FILL 모드로 – 기존 설정 보존 */
+	GLint prevPoly[2];
+	glGetIntegerv(GL_POLYGON_MODE, prevPoly);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	/* ---------- (C) 셰이더 핸들 캐싱 ---------- */
+	Shader_Simple* sh_simple = nullptr;
+	Shader_Phong_Texture* sh_tx = nullptr;
+	Shader_Phong* sh_phong = nullptr;
+	Shader_Spot_Phong* sh_spot = nullptr;
+
+	switch (eff) {
+	case SHADER_SIMPLE:
+		sh_simple = static_cast<Shader_Simple*>(
+			&shader_list[shader_ID_mapper[SHADER_SIMPLE]].get()); break;
+	case SHADER_PHONG:
+		sh_phong = static_cast<Shader_Phong*>(
+			&shader_list[shader_ID_mapper[SHADER_PHONG]].get());  break;
+	case SHADER_SPOT_PHONG:
+		sh_spot = static_cast<Shader_Spot_Phong*>(
+			&shader_list[shader_ID_mapper[SHADER_SPOT_PHONG]].get()); break;
+	case SHADER_PHONG_TEXUTRE:
+		sh_tx = static_cast<Shader_Phong_Texture*>(
+			&shader_list[shader_ID_mapper[SHADER_PHONG_TEXUTRE]].get()); break;
+	}
+
+	/* ---------- (D) 오브젝트별 ModelMatrix 계산 ---------- */
 	glm::mat4 ModelMatrix(1.0f);
+	const unsigned int t_ms = glutGet(GLUT_ELAPSED_TIME);
 
-	/* ---------- (B) 오브젝트별 ModelMatrix 계산 --- */
 	switch (object_id) {
 	case DYNAMIC_OBJECT_TIGER: {
 		glm::vec3 dir, pos = path_pos_dir(t_ms, TIGER_PATH, N_TIGER_SEG, &dir);
 		float heading = atan2f(dir.y, dir.x);
 		ModelMatrix = glm::translate(glm::mat4(1.f), pos) *
-			glm::rotate(glm::mat4(1.f),
-				heading + glm::half_pi<float>(),
-				glm::vec3(0, 0, 1));
+			glm::rotate(glm::mat4(1.f), heading + glm::half_pi<float>(), glm::vec3(0, 0, 1));
 		break;
 	}
 	case DYNAMIC_OBJECT_SPIDER: {
 		glm::vec3 dir, pos = path_pos_dir(t_ms, SPIDER_PATH, N_SPIDER_SEG, &dir);
 		float heading = atan2f(dir.y, dir.x);
-		float roll = t_ms * 0.001f;               // 바퀴 회전
+		float roll = t_ms * 0.001f;
 		ModelMatrix = glm::translate(glm::mat4(1.f), pos) *
-			glm::rotate(glm::mat4(1.f),
-				heading*0.1f + glm::half_pi<float>(),
-				glm::vec3(0, 0, 1)) *
+			glm::rotate(glm::mat4(1.f), heading * 0.1f + glm::half_pi<float>(), glm::vec3(0, 0, 1)) *
 			glm::rotate(glm::mat4(1.f), roll, glm::vec3(1, 0, 0));
 		break;
 	}
 	case DYNAMIC_OBJECT_WOLF: {
 		ModelMatrix = glm::translate(glm::mat4(1.f), scene.g_wolf.pos) *
-			glm::rotate(glm::mat4(1.f),
-				scene.g_wolf.heading,
-				glm::vec3(0, 0, 1));
+			glm::rotate(glm::mat4(1.f), scene.g_wolf.heading, glm::vec3(0, 0, 1));
 		break;
 	}
 	case DYNAMIC_OBJECT_ICOSAHEDRON: {
-		static float theta = 0.0f;
-		theta += 0.5f * TO_RADIAN;
-
-		const glm::vec3 POS = { 125.f, 80.f, 60.f };
-		const float     SCALE = 25.f;
-
-		ModelMatrix =
-			glm::translate(glm::mat4(1.f), POS) *
+		static float theta = 0.0f; theta += 0.5f * TO_RADIAN;
+		const glm::vec3 POS = { 125.f, 80.f, 60.f }; const float SCALE = 25.f;
+		ModelMatrix = glm::translate(glm::mat4(1.f), POS) *
 			glm::rotate(glm::mat4(1.f), theta, glm::vec3(0, 1, 0)) *
 			glm::rotate(glm::mat4(1.f), theta * 0.7f, glm::vec3(1, 0, 1)) *
 			glm::scale(glm::mat4(1.f), glm::vec3(SCALE));
@@ -337,70 +349,69 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 	}
 	}
 
-	/* ---------- (C) 렌더링 루틴 ---------- */
-	Shader_Simple* sh_simple = nullptr;
-	Shader_Phong_Texture* sh_tx = nullptr;
+	/* ---------- (E) 드로우 람다 ---------- */
+	auto drawOne = [&](GLenum cullFace, int flagBlend, float alpha) {
+		glCullFace(cullFace);
 
-	if (eff == SHADER_PHONG_TEXUTRE) {
-		sh_tx = static_cast<Shader_Phong_Texture*>(
-			&shader_list[shader_ID_mapper[SHADER_PHONG_TEXUTRE]].get());
+		for (const Instance& inst : frm.instances) {
+			glm::mat4 MV = ViewMatrix * ModelMatrix * inst.ModelMatrix;
+			glm::mat4 MVP = ProjectionMatrix * MV;
+			glm::mat3 MVN = glm::inverseTranspose(glm::mat3(MV));
 
-		/* DEBUG: 현재 객체-프레임 정보 */
-		//printf("\n[DRAW-TEX ★] objectID=%d  frame=%d  texID=%d  useTex=1\n",
-		//	object_id, cur_idx, frm.tex_id);
-	
-	}
-	else {
-		sh_simple = static_cast<Shader_Simple*>(
-			&shader_list[shader_ID_mapper[SHADER_SIMPLE]].get());
-	}
-	/* 텍스처 오브젝트는 와이어 → 실-모드로 잠시 전환 */
-	GLint prevPoly[2];
-	if (eff == SHADER_PHONG_TEXUTRE) {
-		glGetIntegerv(GL_POLYGON_MODE, prevPoly);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	}
-
-	/* drawOne(cull, flagBlend, alpha) --------------------------------- */
-	auto drawOne = [&](GLenum cullFace, int flagBlend, float alpha)
-		{
-			glCullFace(cullFace);
-
-			for (size_t i = 0; i < frm.instances.size(); ++i) {
-				const Instance& inst = frm.instances[i];
-
-				glm::mat4 MV = ViewMatrix * ModelMatrix * inst.ModelMatrix;
-				glm::mat4 MVP = ProjectionMatrix * MV;
-				glm::mat3 MVN = glm::inverseTranspose(glm::mat3(MV));
-
-				if (eff == SHADER_PHONG_TEXUTRE) {
-					glUseProgram(sh_tx->h_ShaderProgram);
-					glUniformMatrix4fv(sh_tx->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
-					glUniformMatrix4fv(sh_tx->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
-					glUniformMatrix3fv(sh_tx->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
-
-					glActiveTexture(GL_TEXTURE0 + frm.tex_id);
-					glBindTexture(GL_TEXTURE_2D, texture_names[frm.tex_id]);
-
-					scene.apply_user_filter();
-
-					glUniform1i(sh_tx->loc_texture, frm.tex_id);
-				}
-				else {
-					glUseProgram(sh_simple->h_ShaderProgram);
-					glUniformMatrix4fv(sh_simple->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
-					glUniform3fv(sh_simple->loc_primitive_color, 1, &inst.material.diffuse[0]);
-					glUniform1i(sh_simple->loc_u_flag_blending, flagBlend);
-					glUniform1f(sh_simple->loc_u_fragment_alpha, alpha);
-				}
-
-				glBindVertexArray(frm.VAO);
-				glDrawArrays(GL_TRIANGLES, 0, 3 * frm.n_triangles);
+			switch (eff) {
+			case SHADER_SIMPLE: {
+				glUseProgram(sh_simple->h_ShaderProgram);
+				glUniformMatrix4fv(sh_simple->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
+				glUniform3fv(sh_simple->loc_primitive_color, 1, &inst.material.diffuse[0]);
+				glUniform1i(sh_simple->loc_u_flag_blending, flagBlend);
+				glUniform1f(sh_simple->loc_u_fragment_alpha, alpha);
+				break;
 			}
-		};
-	/* ------------------------------------------------------------------ */
+			case SHADER_PHONG: {
+				glUseProgram(sh_phong->h_ShaderProgram);
+				scene.upload_lights_to_current_prog();
+				glUniformMatrix4fv(sh_phong->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
+				glUniformMatrix4fv(sh_phong->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
+				glUniformMatrix3fv(sh_phong->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
+				/* --- NEW: Kd 업로드 -------------------------------- */
+				glUniform3fv(sh_phong->loc_Kd, 1, &inst.material.diffuse[0]);
+				break;
+			}
+			case SHADER_SPOT_PHONG: {
+				glUseProgram(sh_spot->h_ShaderProgram);
+				scene.upload_lights_to_current_prog();
+				glUniformMatrix4fv(sh_spot->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
+				glUniformMatrix4fv(sh_spot->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
+				glUniformMatrix3fv(sh_spot->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
 
-	/* ① 투명 20-면체(icosahedron)만 두 번 그리기 */
+				glUniform4fv(sh_spot->loc_mat_ambient, 1, &inst.material.ambient[0]);
+				glUniform4fv(sh_spot->loc_mat_diffuse, 1, &inst.material.diffuse[0]);
+				glUniform4fv(sh_spot->loc_mat_specular, 1, &inst.material.specular[0]);
+				glUniform4fv(sh_spot->loc_mat_emissive, 1, &inst.material.emission[0]);
+				glUniform1f(sh_spot->loc_mat_shininess, inst.material.exponent);
+				break;
+			}
+			case SHADER_PHONG_TEXUTRE: {
+				glUseProgram(sh_tx->h_ShaderProgram);
+				scene.upload_lights_to_current_prog();
+				glUniformMatrix4fv(sh_tx->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
+				glUniformMatrix4fv(sh_tx->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
+				glUniformMatrix3fv(sh_tx->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
+
+				glActiveTexture(GL_TEXTURE0 + frm.tex_id);
+				glBindTexture(GL_TEXTURE_2D, texture_names[frm.tex_id]);
+				scene.apply_user_filter();
+				glUniform1i(sh_tx->loc_texture, frm.tex_id);
+				break;
+			}
+			}
+
+			glBindVertexArray(frm.VAO);
+			glDrawArrays(GL_TRIANGLES, 0, 3 * frm.n_triangles);
+		}
+		};
+
+	/* ---------- (F) 블렌딩(투명 20‑면체) 처리 ---------- */
 	const bool doBlend =
 		(object_id == DYNAMIC_OBJECT_ICOSAHEDRON) && scene.g_flag_ico_blend;
 
@@ -418,15 +429,13 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 		glDisable(GL_BLEND);
 	}
 	else {
-		glDisable(GL_CULL_FACE);                // 일반 불투명 패스
+		glDisable(GL_CULL_FACE);
 		drawOne(GL_BACK, 0, 1.0f);
 	}
 
-
-	if (eff == SHADER_PHONG_TEXUTRE)
-		glPolygonMode(GL_FRONT_AND_BACK, prevPoly[0]);
-
-	/* 공통 마무리 */
+	/* ---------- (G) 상태 복원 ---------- */
+	glPolygonMode(GL_FRONT_AND_BACK, prevPoly[0]);
 	glBindVertexArray(0);
 	glUseProgram(0);
 }
+
