@@ -224,6 +224,7 @@ void Scene::update_main_camera_follow_wolf() {
 	//printf("[AXIS_MM] pos = (%.1f, %.1f, %.1f)\n",
 	//	cam.cam_view.pos.x, cam.cam_view.pos.y, cam.cam_view.pos.z);
 
+
 }
 
 
@@ -326,6 +327,12 @@ void Scene::clock(int clock_id)
 	time_stamp = (time_stamp + 1U) % UINT_MAX; // 다른 동적 오브젝트 프레임용
 	update_main_camera_follow_wolf();      // 늑대 추적
 	rebuild_cam_axes_and_mm(camera_data.cam_cctv_d, 100.f);  // ★ 추가
+
+	{
+		auto& cam = scene.camera_data.cam_cctv_d;      // 편의 참조
+		scene.light[1].position = glm::vec4(cam.cam_view.pos, 1.0f);   // WC eye
+		scene.light[1].spot_dir = -cam.cam_view.naxis;                 // 시선 방향
+	}
 
 	g_ico_angle += 0.5f * TO_RADIAN;
 
@@ -555,14 +562,15 @@ void Scene::initialize() {
 
 
 	// 1 : 카메라 플래시(눈 좌표) – EC (0,0,10)
-	light[1].light_on = 0;
-	light[1].position = { 120.0f, 100.0f, 49.0f,1 };
-	light[1].diffuse = { 1,1,0.9,1 };
-	light[1].specular = { 1,1,0.9,1 };
-	light[1].spot_dir = { 0,0,-1 };
-	light[1].spot_cut = 15.f;
-	light[1].spot_exp = 20.f;
 
+
+	/* ───────── CCTV-D Spotlight (#3) ───────── */
+	light[1].light_on = 0;                    // 항상 ON (4키로 토글해도 됨)
+	light[1].ambient = { 0.05f,0.05f,0.05f,1 };
+	light[1].diffuse = { 1.0f ,1.0f ,0.9f ,1 };
+	light[1].specular = { 1.0f ,1.0f ,0.9f ,1 };
+	light[1].spot_cut = 20.f;                 // 좁은 원뿔
+	light[1].spot_exp = 25.f;                 // 강한 집중
 
 
 // 2 : 타이거 스포트라이트
@@ -628,14 +636,15 @@ void Scene::draw_world() {
 	/* 월드 고정 라이트(0) */
 	glm::vec4 posEC = ViewMatrix * scene.light[0].position;
 	glUniform4fv(scene.loc_light[0].position, 1, &posEC[0]);
-	printf("[frame] L0 posEC=(%.1f,%.1f,%.1f) on=%d",
-		posEC.x, posEC.y, posEC.z, scene.light[0].light_on);
+	//printf("[frame] L0 posEC=(%.1f,%.1f,%.1f) on=%d",
+	//	posEC.x, posEC.y, posEC.z, scene.light[0].light_on);
 
-	/* 눈 좌표 라이트(1) */
-	glUniform4fv(scene.loc_light[1].position, 1, &scene.light[1].position[0]);
-	printf("[frame] L1 (eye) posEC=(%.1f,%.1f,%.1f) on=%d",
-		scene.light[1].position.x, scene.light[1].position.y,
-		scene.light[1].position.z, scene.light[1].light_on);
+/* --- CCTV-D Spotlight (#3) --------------------------------- */
+	glm::vec4 posEC1 = ViewMatrix * scene.light[3].position;
+	glm::vec3 dirEC1 = glm::mat3(ViewMatrix) * scene.light[3].spot_dir;
+
+	glUniform4fv(scene.loc_light[1].position, 1, &posEC1.x);
+	glUniform3fv(scene.loc_light[1].spot_dir, 1, &dirEC1.x);
 
 	
 
