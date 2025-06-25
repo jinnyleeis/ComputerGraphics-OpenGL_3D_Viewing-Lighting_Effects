@@ -560,11 +560,11 @@ void Scene::initialize() {
 	light[1].spot_exp = 20.f;
 // 2 : 타이거 스포트라이트
 light[2].light_on   = 0;              // ‘5’ 키로 토글
-light[2].position   = { 0,1,0,1 };  // MC 좌표 (위에서 다시 변환됨)
+light[2].position   = { 1,0,0,1 };  // MC 좌표 (위에서 다시 변환됨)
 light[2].diffuse    = { 1,0.9,0.7,1 };
 light[2].specular   = { 1,0.9,0.7,1 };
 light[2].spot_dir   = { 0,1,-0.3 };   // MC 기준
-light[2].spot_cut   = 30.f;
+light[2].spot_cut   = 60.f;
 light[2].spot_exp   = 15.f;
 
 
@@ -595,29 +595,7 @@ void Scene::draw_dynamic_world() {
 		TIGER_PATH, N_TIGER_SEG, &dir);
 	float heading = atan2f(dir.y, dir.x);
 
-	glm::mat4 M_tiger =
-		glm::translate(glm::mat4(1.f), posMC) *
-		glm::rotate(glm::mat4(1.f),
-			heading + glm::half_pi<float>(),
-			glm::vec3(0, 0, 1));
-
-	/* ②  모델좌표계 기준 라이트 원점·방향 정의  */
-	const glm::vec4 Lpos_MC(0.f, 12.f, 25.f, 1.f);   // 호랑이 머리 위
-	const glm::vec3 Ldir_MC(0.f, 1.f, -0.3f);       // 살짝 아래를 비춤
-
-	/* ③ EC 변환 */
-	glm::vec4 pos_EC = ViewMatrix * M_tiger * Lpos_MC;
-	glm::vec3 dir_EC = glm::mat3(ViewMatrix * M_tiger) * Ldir_MC;
-
-	/* ④ spot-Phong 셰이더에 uniform 업로드 */
-	auto* sh = static_cast<Shader_Spot_Phong*>(
-		&shader_list[shader_ID_mapper[SHADER_SPOT_PHONG]].get());
-
-	glUseProgram(sh->h_ShaderProgram);
-	glUniform4fv(loc_light[2].position, 1, &pos_EC.x);
-	glUniform3fv(loc_light[2].spot_dir, 1, &dir_EC.x);
-	glUseProgram(0);
-
+	
 	/* ⑤ 원래 하던 것처럼 모든 동적 오브젝트 그리기 */
 	for (auto& dobj_ref : dynamic_objects) {
 		if (!dobj_ref.get().flag_valid) continue;
