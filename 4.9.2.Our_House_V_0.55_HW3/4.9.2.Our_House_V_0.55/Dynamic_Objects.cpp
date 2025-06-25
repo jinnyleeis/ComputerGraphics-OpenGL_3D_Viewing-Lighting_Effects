@@ -337,12 +337,15 @@ void Dynamic_Object::draw_object(glm::mat4& ViewMatrix,
 			glm::rotate(glm::mat4(1.f), heading + glm::half_pi<float>(), glm::vec3(0, 0, 1));
 		
 		/* ②  모델좌표계 기준 라이트 원점·방향 정의  */
-		const glm::vec4 Lpos_MC(0.f, 12.f, 25.f, 1.f);   // 호랑이 머리 위
-		const glm::vec3 Ldir_MC(0.f, 1.f, -0.3f);       // 살짝 아래를 비춤
+		const glm::vec4 Lpos_MC(0.f, 0.f, 0.f, 1.f);   // 호랑이 머리 위
+		const glm::vec3 Ldir_MC(0.0f, 0.0f, -1.0f);       // 살짝 아래를 비춤
 
 		/* ③ EC 변환 */
 		glm::vec4 pos_EC =ModelMatrix * Lpos_MC;
 		glm::vec3 dir_EC = glm::mat3(ModelMatrix) * Ldir_MC;
+
+		scene.light[2].position = pos_EC;
+		scene.light[2].spot_dir = dir_EC;
 
 		/* ④ spot-Phong 셰이더에 uniform 업로드 */
 		auto* sh = static_cast<Shader_Spot_Phong*>(
