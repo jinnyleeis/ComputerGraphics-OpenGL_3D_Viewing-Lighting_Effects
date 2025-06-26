@@ -692,8 +692,8 @@ void Scene::draw_world() {
 	//	posEC.x, posEC.y, posEC.z, scene.light[0].light_on);
 
 /* --- CCTV-D Spotlight (#3) --------------------------------- */
-	glm::vec4 posEC1 = ViewMatrix * scene.light[3].position;
-	glm::vec3 dirEC1 = glm::mat3(ViewMatrix) * scene.light[3].spot_dir;
+	glm::vec4 posEC1 = ViewMatrix * scene.light[1].position;
+	glm::vec3 dirEC1 = glm::mat3(ViewMatrix) * scene.light[1].spot_dir;
 
 	glUniform4fv(scene.loc_light[1].position, 1, &posEC1.x);
 	glUniform3fv(scene.loc_light[1].spot_dir, 1, &dirEC1.x);
