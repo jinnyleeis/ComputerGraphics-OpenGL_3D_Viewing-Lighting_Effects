@@ -251,8 +251,8 @@ void Dragon ::define_object() {
 
 		instances.emplace_back();
 		M = &instances.back().ModelMatrix;
-		*M = glm::translate(glm::mat4(1.0f), glm::vec3(157.0f, 76.5f, 40.0f));
-		*M = glm::scale(*M, glm::vec3(1.0f));
+		*M = glm::translate(glm::mat4(1.0f), glm::vec3(157.0f, 76.5f, 33.0f));
+		*M = glm::scale(*M, glm::vec3(0.8f));
 		*M = glm::rotate(*M, -180.0f * TO_RADIAN, glm::vec3(0.0f, 1.0f, 0.0f));
 		*M = glm::scale(*M, glm::vec3(1.0f,1.0f,-1.0f));
 		mat = &instances.back().material;
