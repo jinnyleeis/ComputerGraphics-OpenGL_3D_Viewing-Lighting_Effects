@@ -274,8 +274,8 @@ void Wood_Tower :: define_object() {
 		tex_id = TEXTURE_ID_WOOD_TOWER;
 
 		M = &instances.back().ModelMatrix;
-		*M = glm::translate(glm::mat4(1.0f), glm::vec3(200.0f, 109.0f, 13.0f));
-		*M = glm::scale(*M, glm::vec3(1.3f));
+		*M = glm::translate(glm::mat4(1.0f), glm::vec3(205.0f, 109.0f, 13.0f));
+		*M = glm::scale(*M, glm::vec3(10.3f));
 		mat = &instances.back().material;
 		mat->ambient = glm::vec4(0.21f, 0.13f, 0.05f, 1);
 		mat->diffuse = glm::vec4(0.71f, 0.43f, 0.18f, 1);
@@ -451,11 +451,11 @@ void Static_Object::draw_object(glm::mat4& ViewMatrix,
     if (is_ironman && g_flag_fresnel) eff = SHADER_NEON_FRESNEL;
 	/* ② 나머지는 기존 로직(eff 결정) 그대로 */
 
-	bool is_dragon = (object_id == STATIC_OBJECT_DRAGON);
-
-	if (is_dragon && g_flag_dissolve)          /* 7-키 토글 */
-		eff = SHADER_LAVA;
-
+/* ---------- (B) 최종 사용할 셰이더 결정 ---------- */
+if (object_id == STATIC_OBJECT_DRAGON) {
+    /* 7-키 토글 결과 : g_flag_dissolve == true ▸ Lava */
+    eff = g_flag_dissolve ? SHADER_LAVA : SHADER_SPOT_PHONG;
+}
 
 
 	/* ---------- (2) 고양이는 항상 폴리곤-FILL로 강제 -------------------- */
