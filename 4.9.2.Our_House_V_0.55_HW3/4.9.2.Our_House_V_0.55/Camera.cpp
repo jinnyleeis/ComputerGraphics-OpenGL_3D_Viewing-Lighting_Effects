@@ -5,6 +5,9 @@
 #include "Camera.h"
 #include <glm/gtc/matrix_transform.hpp>
 #define CAM_AXIS_LENGTH 5.0f
+ /* ─── 카메라 공용 클리핑 파라미터 ─── */
+constexpr float CAM_NEAR = 1.0f;   // <<<< 0.05 → 1.0
+constexpr float CAM_FAR = 20000.f; // <<<< 50000 → 20000
 
 #define TO_RADIAN 0.01745329252f
 #define TO_DEGREE 57.295779513f
@@ -65,8 +68,8 @@ void Perspective_Camera::define_camera(int win_width, int win_height,
 	cam_proj.projection_type = CAMERA_PROJECTION_PERSPECTIVE;
 	cam_proj.params.pers.fovy = 15.0f * TO_RADIAN;
 	cam_proj.params.pers.aspect = win_aspect_ratio;
-	cam_proj.params.pers.n = 0.05f;
-	cam_proj.params.pers.f = 50000.0f;
+	cam_proj.params.pers.n = CAM_NEAR;   // ★ 수정
+	cam_proj.params.pers.f = CAM_FAR;    // ★ 수정
 
 	switch (camera_id) {
 	case CAMERA_MAIN:

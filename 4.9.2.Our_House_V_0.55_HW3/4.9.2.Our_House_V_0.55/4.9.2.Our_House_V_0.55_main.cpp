@@ -133,6 +133,10 @@ void rebuild_view(Camera& cam) {
 
 void rebuild_perspective(Camera& cam) {
 	if (cam.cam_proj.projection_type != CAMERA_PROJECTION_PERSPECTIVE) return;
+
+	cam.cam_proj.params.pers.n = 1.0f;  
+	cam.cam_proj.params.pers.f = 20000.0f;
+
 	cam.ProjectionMatrix = glm::perspective(
 		cam.cam_proj.params.pers.fovy,
 		cam.cam_proj.params.pers.aspect,
@@ -486,6 +490,7 @@ void register_callbacks(void) {
 
 void initialize_OpenGL(void) {
 	glEnable(GL_DEPTH_TEST); // Default state
+	glEnable(GL_DEPTH_CLAMP);
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glClearColor(0.12f, 0.18f, 0.12f, 1.0f);

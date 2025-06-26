@@ -614,44 +614,51 @@ light[2].spot_exp   = 15.f;
  *  Scene_Definitions.cpp
  *  draw_static_world()  –  우드타워 전용: Fill+양면+Depth OFF
  * ===============================================================*/
+ /* ===============================================================
+  * Scene_Definitions.cpp
+  * Scene::draw_static_world()  –  Wood-Tower 전용: 항상 FILL,
+  *                               다른 오브젝트의 폴리곤 모드를 건드리지 않음
+  * ===============================================================*/
+  /* ===============================================================
+   * Scene::draw_static_world()   –   우드타워 전용 처리 개선
+   *   · LINE 모드여도 항상 FILL
+   *   · Cull OFF (양면)           – 필요 시만
+   *   · 깊이 비교·기록은 그대로 유지  🔸
+   * ===============================================================*/
 void Scene::draw_static_world()
 {
-	/* (1) 전역 상태 백업 ------------------------------------- */
+	/* 0) 전역 렌더 상태 백업 ------------------------------- */
 	GLint     prevPolyMode[2];   glGetIntegerv(GL_POLYGON_MODE, prevPolyMode);
 	GLboolean prevCullEnabled = glIsEnabled(GL_CULL_FACE);
-	GLboolean prevDepthEnabled = glIsEnabled(GL_DEPTH_TEST);
-	GLboolean prevDepthWrite;
-	glGetBooleanv(GL_DEPTH_WRITEMASK, &prevDepthWrite);
 
-	/* (2) 모든 정적 오브젝트 --------------------------------- */
+	/* 1) 정적 오브젝트 루프 ------------------------------- */
 	for (auto& obj_ref : static_objects) {
 		Static_Object& obj = obj_ref.get();
 		if (!obj.flag_valid) continue;
 
-
 		const bool isWT = (obj.object_id == STATIC_OBJECT_WOOD_TOWER);
+
+		/* ── (A) 우드타워 전용 상태 세팅 ─────────────────── */
 		if (isWT) {
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glDisable(GL_CULL_FACE);             // 양면
-			/* 깊이 버퍼는 그대로 ON : 사라지는 현상 방지 */
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);          // 항상 면
+			glDisable(GL_CULL_FACE);                            // 양면
+			/* 깊이 비교/기록은 그대로 둔다 🔸 */
 		}
 
+		/* ── (B) 실제 드로우 ─────────────────────────────── */
 		obj.draw_object(ViewMatrix, ProjectionMatrix,
 			shader_kind, shader_list);
 
+		/* ── (C) 상태 복원 (우드타워에만 해당) ────────────── */
 		if (isWT) {
-			/* ─── 상태 완전 복원 ─────────────────────── */
-			glPolygonMode(GL_FRONT_AND_BACK, prevPolyMode[0]);
+			/* Cull 복구 */
 			if (prevCullEnabled) glEnable(GL_CULL_FACE);
 			else                 glDisable(GL_CULL_FACE);
-
-			if (prevDepthEnabled) glEnable(GL_DEPTH_TEST);
-			else                  glDisable(GL_DEPTH_TEST);
-			glDepthMask(prevDepthWrite);
+			/* 폴리곤 모드 복구 (LINE 모드 등) */
+			glPolygonMode(GL_FRONT_AND_BACK, prevPolyMode[0]);
 		}
 	}
 }
-
 
 // Scene_Definitions.cpp
 void Scene::draw_dynamic_world() {

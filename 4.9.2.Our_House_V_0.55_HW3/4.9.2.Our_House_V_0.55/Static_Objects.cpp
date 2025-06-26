@@ -275,7 +275,7 @@ void Wood_Tower :: define_object() {
 
 		M = &instances.back().ModelMatrix;
 		*M = glm::translate(glm::mat4(1.0f), glm::vec3(205.0f, 109.0f, 13.0f));
-		*M = glm::scale(*M, glm::vec3(10.3f));
+		*M = glm::scale(*M, glm::vec3(0.9f));
 		mat = &instances.back().material;
 		mat->ambient = glm::vec4(0.21f, 0.13f, 0.05f, 1);
 		mat->diffuse = glm::vec4(0.71f, 0.43f, 0.18f, 1);
@@ -412,211 +412,232 @@ void print_mat4(const char* string, glm::mat4 M) {
 		fprintf(stdout, "*** COL[%d] (%f, %f, %f, %f)\n", i, M[i].x, M[i].y, M[i].z, M[i].w);
 	fprintf(stdout, "**************\n\n");
 }
-
-
-/* -------------------------------------------------------------------- */
-/*  Static_Object::draw_object                                          */
-/*  - 정적 오브젝트 1개(또는 인스턴스들)를 주어진 셰이더로 그린다          */
-/* -------------------------------------------------------------------- */
+/**********************************************************************
+ *  Static_Object::draw_object  ▸  완전 교체본
+ *    · 모든 기존 기능 유지
+ *    · 우드타워(STATIC_OBJECT_WOOD_TOWER) 전용 FILL + 양면
+ *********************************************************************/
 void Static_Object::draw_object(glm::mat4& ViewMatrix,
 	glm::mat4& ProjectionMatrix,
 	SHADER_ID  default_shader,
 	std::vector<std::reference_wrapper<Shader>>& shader_list)
 {
+	/* ────────────────────────────────────────────────────
+	   0) 객체별 특성 플래그 & 우드타워용 렌더 상태 백업
+	──────────────────────────────────────────────────── */
+	const bool has_tex = (tex_id >= 0);
+	const bool is_cat = (object_id == STATIC_OBJECT_CAT);
+	const bool is_wt = (object_id == STATIC_OBJECT_WOOD_TOWER);
+	const bool is_drag = (object_id == STATIC_OBJECT_DRAGON);
+	const bool is_iron = (object_id == STATIC_OBJECT_IRONMAN);
+
+	/* 우드타워 : 면 + 양면 렌더링을 강제하고 상태를 저장 */
+	GLint     savedPolyWT[2] = { GL_FILL, GL_FILL };
+	GLboolean savedCullWT = GL_FALSE;
+	if (is_wt) {
+		glGetIntegerv(GL_POLYGON_MODE, savedPolyWT);
+		if (savedPolyWT[0] != GL_FILL)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		savedCullWT = glIsEnabled(GL_CULL_FACE);
+		glDisable(GL_CULL_FACE);                // 양면
+	}
+
+	/* 고양이 : 항상 FILL (단, 폴리곤 모드만 저장/복구) */
+	GLint savedPolyCat[2] = { GL_FILL, GL_FILL };
+	if (is_cat) {
+		glGetIntegerv(GL_POLYGON_MODE, savedPolyCat);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+
 	glFrontFace(front_face_mode);
 
-	/* ---------- (1) 이 오브젝트에 적용할 최종 셰이더 결정 ---------------- */
-	const bool  has_tex = (tex_id >= 0);
-	bool        is_cat = (object_id == STATIC_OBJECT_CAT);          // ★ 고양이만 특수 처리
-	bool is_woodTower = (object_id == STATIC_OBJECT_WOOD_TOWER);
-
-
+	/* ────────────────────────────────────────────────────
+	   1) 최종 사용할 셰이더(eff) 결정
+	──────────────────────────────────────────────────── */
 	SHADER_ID eff;
-	if (has_tex)
-		eff = SHADER_PHONG_TEXUTRE;                                  // (기존) 텍스처-Phong
-	else if (is_cat) {                                               // ★ shading mode 토글
+	if (has_tex)                                eff = SHADER_PHONG_TEXUTRE;
+	else if (is_cat) {
 		switch (g_shading_mode) {
 		case SHADE_GOURAUD: eff = SHADER_GOURAUD;  break;
 		case SHADE_PHONG:   eff = SHADER_PHONG;    break;
 		default:            eff = SHADER_SIMPLE;   break;
 		}
 	}
-	else
-		eff = default_shader;                                        // 기타 오브젝트
+	else                                         eff = default_shader;
 
-	bool is_ironman = (object_id == STATIC_OBJECT_IRONMAN);
+	/* 특수 효과 셰이더 오버라이드 */
+	if (is_iron && g_flag_fresnel) eff = SHADER_NEON_FRESNEL;
+	if (is_drag)                    eff = g_flag_dissolve ? SHADER_LAVA
+		: SHADER_SPOT_PHONG;
 
-	/* ① “효과 활성+해당 오브젝트” → 전용 셰이더 */
-	
-    if (is_ironman && g_flag_fresnel) eff = SHADER_NEON_FRESNEL;
-	/* ② 나머지는 기존 로직(eff 결정) 그대로 */
+	/* ────────────────────────────────────────────────────
+	   2) 셰이더 핸들 캐싱
+	──────────────────────────────────────────────────── */
+	Shader_Simple* sh_simple = nullptr;
+	Shader_Gouraud* sh_gour = nullptr;
+	Shader_Phong* sh_phong = nullptr;
+	Shader_Phong_Texture* sh_tex = nullptr;
+	Shader_Spot_Phong* sh_sp = nullptr;
+	Shader_Lava* sh_lava = nullptr;
+	Shader_FresnelNeon* sh_fres = nullptr;
 
-/* ---------- (B) 최종 사용할 셰이더 결정 ---------- */
-if (object_id == STATIC_OBJECT_DRAGON) {
-    /* 7-키 토글 결과 : g_flag_dissolve == true ▸ Lava */
-    eff = g_flag_dissolve ? SHADER_LAVA : SHADER_SPOT_PHONG;
-}
-
-
-	/* ---------- (2) 고양이는 항상 폴리곤-FILL로 강제 -------------------- */
-	GLint prevPoly[2] = { GL_FILL, GL_FILL };
-	if (is_cat) {
-		glGetIntegerv(GL_POLYGON_MODE, prevPoly);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);                   // ★
+	switch (eff) {
+	case SHADER_SIMPLE:
+		sh_simple = static_cast<Shader_Simple*>
+			(&shader_list[shader_ID_mapper[SHADER_SIMPLE]].get()); break;
+	case SHADER_GOURAUD:
+		sh_gour = static_cast<Shader_Gouraud*>
+			(&shader_list[shader_ID_mapper[SHADER_GOURAUD]].get()); break;
+	case SHADER_PHONG:
+		sh_phong = static_cast<Shader_Phong*>
+			(&shader_list[shader_ID_mapper[SHADER_PHONG]].get());   break;
+	case SHADER_PHONG_TEXUTRE:
+		sh_tex = static_cast<Shader_Phong_Texture*>
+			(&shader_list[shader_ID_mapper[SHADER_PHONG_TEXUTRE]].get()); break;
+	case SHADER_SPOT_PHONG:
+		sh_sp = static_cast<Shader_Spot_Phong*>
+			(&shader_list[shader_ID_mapper[SHADER_SPOT_PHONG]].get()); break;
+	case SHADER_LAVA:
+		sh_lava = static_cast<Shader_Lava*>
+			(&shader_list[shader_ID_mapper[SHADER_LAVA]].get());     break;
+	case SHADER_NEON_FRESNEL:
+		sh_fres = static_cast<Shader_FresnelNeon*>
+			(&shader_list[shader_ID_mapper[SHADER_NEON_FRESNEL]].get()); break;
 	}
 
-
-
-	/* ---------- (3) 모든 인스턴스 렌더링 -------------------------------- */
-	for (const Instance& inst : instances) {
+	/* ────────────────────────────────────────────────────
+	   3) 모든 인스턴스 렌더링
+	──────────────────────────────────────────────────── */
+	for (const Instance& inst : instances)
+	{
 		glm::mat4 MV = ViewMatrix * inst.ModelMatrix;
 		glm::mat4 MVP = ProjectionMatrix * MV;
 		glm::mat3 MVN = glm::inverseTranspose(glm::mat3(MV));
 
-		switch (eff) {
-			/* ----- (a) 단순 색 (기존) ------------------------------------ */
+		switch (eff)
+		{
+			/* --- (a) SIMPLE ------------------------------------------------- */
 		case SHADER_SIMPLE: {
-			auto* sh = static_cast<Shader_Simple*>(
-				&shader_list[shader_ID_mapper[SHADER_SIMPLE]].get());
-
-			glUseProgram(sh->h_ShaderProgram);
+			glUseProgram(sh_simple->h_ShaderProgram);
 			scene.upload_lights_to_current_prog();
-			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
-			glUniform3fv(sh->loc_primitive_color, 1, &inst.material.diffuse[0]);
+			glUniformMatrix4fv(sh_simple->loc_ModelViewProjectionMatrix, 1,
+				GL_FALSE, &MVP[0][0]);
+			glUniform3fv(sh_simple->loc_primitive_color, 1,
+				&inst.material.diffuse[0]);
 			break;
 		}
-
-						  /* ----- (b) Gouraud ------------------------------------------- */
+						  /* --- (b) GOURAUD ------------------------------------------------ */
 		case SHADER_GOURAUD: {
-			auto* sh = static_cast<Shader_Gouraud*>(
-				&shader_list[shader_ID_mapper[SHADER_GOURAUD]].get());
-
-			glUseProgram(sh->h_ShaderProgram);
+			glUseProgram(sh_gour->h_ShaderProgram);
 			scene.upload_lights_to_current_prog();
-
-			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
-			glUniformMatrix4fv(sh->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
-			glUniformMatrix3fv(sh->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
+			glUniformMatrix4fv(sh_gour->loc_ModelViewProjectionMatrix, 1,
+				GL_FALSE, &MVP[0][0]);
+			glUniformMatrix4fv(sh_gour->loc_ModelViewMatrix, 1,
+				GL_FALSE, &MV[0][0]);
+			glUniformMatrix3fv(sh_gour->loc_ModelViewMatrixInvTrans, 1,
+				GL_FALSE, &MVN[0][0]);
 			break;
 		}
-
-						   /* ----- (c) Phong --------------------------------------------- */
+						   /* --- (c) PHONG -------------------------------------------------- */
 		case SHADER_PHONG: {
-			auto* sh = static_cast<Shader_Phong*>(
-				&shader_list[shader_ID_mapper[SHADER_PHONG]].get());
-
-			glUseProgram(sh->h_ShaderProgram);
+			glUseProgram(sh_phong->h_ShaderProgram);
 			scene.upload_lights_to_current_prog();
-
-			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
-			glUniformMatrix4fv(sh->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
-			glUniformMatrix3fv(sh->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
-			/* --- NEW: Kd 업로드 -------------------------------- */
-			glUniform3fv(sh->loc_Kd, 1, &inst.material.diffuse[0]);
-		
+			glUniformMatrix4fv(sh_phong->loc_ModelViewProjectionMatrix, 1,
+				GL_FALSE, &MVP[0][0]);
+			glUniformMatrix4fv(sh_phong->loc_ModelViewMatrix, 1,
+				GL_FALSE, &MV[0][0]);
+			glUniformMatrix3fv(sh_phong->loc_ModelViewMatrixInvTrans, 1,
+				GL_FALSE, &MVN[0][0]);
+			glUniform3fv(sh_phong->loc_Kd, 1, &inst.material.diffuse[0]);
 			break;
 		}
-
-						 /* ----- (d) 텍스처-Phong (기존) -------------------------------- */
+						 /* --- (d) PHONG + TEXTURE --------------------------------------- */
 		case SHADER_PHONG_TEXUTRE: {
-			auto* sh = static_cast<Shader_Phong_Texture*>(
-				&shader_list[shader_ID_mapper[SHADER_PHONG_TEXUTRE]].get());
-
-			glUseProgram(sh->h_ShaderProgram);
+			glUseProgram(sh_tex->h_ShaderProgram);
 			scene.upload_lights_to_current_prog();
-
-			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
-			glUniformMatrix4fv(sh->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
-			glUniformMatrix3fv(sh->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
-
+			glUniformMatrix4fv(sh_tex->loc_ModelViewProjectionMatrix, 1,
+				GL_FALSE, &MVP[0][0]);
+			glUniformMatrix4fv(sh_tex->loc_ModelViewMatrix, 1,
+				GL_FALSE, &MV[0][0]);
+			glUniformMatrix3fv(sh_tex->loc_ModelViewMatrixInvTrans, 1,
+				GL_FALSE, &MVN[0][0]);
 			glActiveTexture(GL_TEXTURE0 + tex_id);
 			glBindTexture(GL_TEXTURE_2D, texture_names[tex_id]);
 			scene.apply_user_filter();
-			glUniform1i(sh->loc_texture, tex_id);
+			glUniform1i(sh_tex->loc_texture, tex_id);
 			break;
 		}
-								 /* ── Static_Object::draw_object(...)  switch(eff) 부분 ───────── */
+								 /* --- (e) SPOT-PHONG -------------------------------------------- */
 		case SHADER_SPOT_PHONG: {
-			auto* sh = static_cast<Shader_Spot_Phong*>(
-				&shader_list[shader_ID_mapper[SHADER_SPOT_PHONG]].get());
-
-			glUseProgram(sh->h_ShaderProgram);
+			glUseProgram(sh_sp->h_ShaderProgram);
 			scene.upload_lights_to_current_prog();
-
-			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
-			glUniformMatrix4fv(sh->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
-			glUniformMatrix3fv(sh->loc_ModelViewMatrixInvTrans, 1, GL_FALSE, &MVN[0][0]);
-
-			/* --- NEW: 재질 필드별 업로드 ----------------------------- */
-			glUniform4fv(sh->loc_mat_ambient, 1, &inst.material.ambient[0]);
-			glUniform4fv(sh->loc_mat_diffuse, 1, &inst.material.diffuse[0]);
-			glUniform4fv(sh->loc_mat_specular, 1, &inst.material.specular[0]);
-			glUniform4fv(sh->loc_mat_emissive, 1, &inst.material.emission[0]);
-			glUniform1f(sh->loc_mat_shininess, inst.material.exponent);
+			glUniformMatrix4fv(sh_sp->loc_ModelViewProjectionMatrix, 1,
+				GL_FALSE, &MVP[0][0]);
+			glUniformMatrix4fv(sh_sp->loc_ModelViewMatrix, 1,
+				GL_FALSE, &MV[0][0]);
+			glUniformMatrix3fv(sh_sp->loc_ModelViewMatrixInvTrans, 1,
+				GL_FALSE, &MVN[0][0]);
+			glUniform4fv(sh_sp->loc_mat_ambient, 1, &inst.material.ambient[0]);
+			glUniform4fv(sh_sp->loc_mat_diffuse, 1, &inst.material.diffuse[0]);
+			glUniform4fv(sh_sp->loc_mat_specular, 1, &inst.material.specular[0]);
+			glUniform4fv(sh_sp->loc_mat_emissive, 1, &inst.material.emission[0]);
+			glUniform1f(sh_sp->loc_mat_shininess, inst.material.exponent);
 			break;
 		}
-							  /* (e) DISSOLVE ─ DRAGON ---------------------------------- */
+							  /* --- (f) LAVA (Dragon Dissolve) -------------------------------- */
 		case SHADER_LAVA: {
-			auto* sh = static_cast<Shader_Lava*>(
-				&shader_list[shader_ID_mapper[SHADER_LAVA]].get());
-			glUseProgram(sh->h_ShaderProgram);
-
-			/* MV / MVP */
-			glm::mat4 MV = ViewMatrix * inst.ModelMatrix;
-			glm::mat4 MVP = ProjectionMatrix * MV;
-			glUniformMatrix4fv(sh->loc_MVP, 1, GL_FALSE, &MVP[0][0]);
-			glUniformMatrix4fv(sh->loc_MV, 1, GL_FALSE, &MV[0][0]);
-
-			/* 시간 · 파라미터 */
+			glUseProgram(sh_lava->h_ShaderProgram);
 			float tSec = glutGet(GLUT_ELAPSED_TIME) * 0.001f;
-			glUniform1f(sh->loc_time, tSec);
-			glUniform2f(sh->loc_uParams, 6.0f, 1.2f);
-			glUniform2f(sh->loc_vParams, 3.0f, 1.6f);
-
-			/* 라바 텍스처 바인딩 */
+			glUniformMatrix4fv(sh_lava->loc_MVP, 1, GL_FALSE, &MVP[0][0]);
+			glUniformMatrix4fv(sh_lava->loc_MV, 1, GL_FALSE, &MV[0][0]);
+			glUniform1f(sh_lava->loc_time, tSec);
+			glUniform2f(sh_lava->loc_uParams, 6.0f, 1.2f);
+			glUniform2f(sh_lava->loc_vParams, 3.0f, 1.6f);
 			glActiveTexture(GL_TEXTURE0 + TEXTURE_ID_DRAGON_LAVA);
-			glBindTexture(GL_TEXTURE_2D, texture_names[TEXTURE_ID_DRAGON_LAVA]);
+			glBindTexture(GL_TEXTURE_2D,
+				texture_names[TEXTURE_ID_DRAGON_LAVA]);
 			scene.apply_user_filter();
-			glUniform1i(sh->loc_tex, TEXTURE_ID_DRAGON_LAVA);
+			glUniform1i(sh_lava->loc_tex, TEXTURE_ID_DRAGON_LAVA);
 			break;
 		}
-
-
-							/* (f) FRESNEL-NEON ─ IRONMAN ------------------------------ */
+						/* --- (g) FRESNEL-NEON (Ironman) -------------------------------- */
 		case SHADER_NEON_FRESNEL: {
-			auto* sh = static_cast<Shader_FresnelNeon*>(
-				&shader_list[shader_ID_mapper[SHADER_NEON_FRESNEL]].get());
-			glUseProgram(sh->h_ShaderProgram);
-
+			glUseProgram(sh_fres->h_ShaderProgram);
 			float tSec = glutGet(GLUT_ELAPSED_TIME) * 0.001f;
-
-			glm::mat4 MV = ViewMatrix * inst.ModelMatrix;
-			glm::mat4 MVP = ProjectionMatrix * MV;
-			glm::mat3 MVN = glm::inverseTranspose(glm::mat3(MV));
-
-			glUniformMatrix4fv(sh->loc_ModelViewProjectionMatrix, 1, GL_FALSE, &MVP[0][0]);
-			glUniformMatrix4fv(sh->loc_ModelViewMatrix, 1, GL_FALSE, &MV[0][0]);
-			glUniformMatrix3fv(sh->loc_MVN, 1, GL_FALSE, &MVN[0][0]);
-			glUniform1f(sh->loc_time, tSec);
-			/* 네온-블루 */
-			glUniform3f(sh->loc_emissionColor, 0.0f, 1.5f, 3.0f);
+			glUniformMatrix4fv(sh_fres->loc_ModelViewProjectionMatrix, 1,
+				GL_FALSE, &MVP[0][0]);
+			glUniformMatrix4fv(sh_fres->loc_ModelViewMatrix, 1,
+				GL_FALSE, &MV[0][0]);
+			glUniformMatrix3fv(sh_fres->loc_MVN, 1,
+				GL_FALSE, &MVN[0][0]);
+			glUniform1f(sh_fres->loc_time, tSec);
+			glUniform3f(sh_fres->loc_emissionColor, 0.0f, 1.5f, 3.0f);
 			break;
 		}
+		} /* switch(eff) */
 
-
-		} /* switch */
-
-		/* ----- (공통) 정점 배열 & 드로우 ----------------------------- */
+		/* --- 실제 드로우 ---------------------------------------------- */
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3 * n_triangles);
-	}
+	} /* for(instances) */
 
-	/* ---------- (4) 상태 복원 ---------------------------------------- */
-	if (is_cat) {
-		glPolygonMode(GL_FRONT_AND_BACK, prevPoly[0]);
+	/* ────────────────────────────────────────────────────
+	   4) 상태 복원
+	──────────────────────────────────────────────────── */
+	if (is_cat)
+		glPolygonMode(GL_FRONT_AND_BACK, savedPolyCat[0]);
+
+	if (is_wt) {
+		/* Cull 상태 복구 */
+		if (savedCullWT) glEnable(GL_CULL_FACE);
+		else             glDisable(GL_CULL_FACE);
+		/* 폴리곤 모드 복구 */
+		glPolygonMode(GL_FRONT_AND_BACK, savedPolyWT[0]);
 	}
-	
 
 	glBindVertexArray(0);
 	glUseProgram(0);
 }
+
+
