@@ -275,7 +275,7 @@ void Wood_Tower :: define_object() {
 
 		M = &instances.back().ModelMatrix;
 		*M = glm::translate(glm::mat4(1.0f), glm::vec3(205.0f, 109.0f, 13.0f));
-		*M = glm::scale(*M, glm::vec3(10.3f));
+		*M = glm::scale(*M, glm::vec3(1.3f));
 		mat = &instances.back().material;
 		mat->ambient = glm::vec4(0.21f, 0.13f, 0.05f, 1);
 		mat->diffuse = glm::vec4(0.71f, 0.43f, 0.18f, 1);

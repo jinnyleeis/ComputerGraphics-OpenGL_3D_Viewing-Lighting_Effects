@@ -28,8 +28,8 @@ SHADING_MODE g_shading_mode = SHADE_SIMPLE;
 
 GLuint texture_names[N_MAX_TEXTURES] = { 0 };
 
-//static GLenum g_cur_filter = GL_LINEAR;   // 디폴트는 Linear
-static GLenum g_cur_filter = GL_NEAREST;   // 디폴트는 Linear
+static GLenum g_cur_filter = GL_LINEAR;   // 디폴트는 Linear
+//static GLenum g_cur_filter = GL_NEAREST;   // 디폴트는 Linear
 /* Scene_Definitions.cpp – 전역 변수 정의 */
 bool g_flag_dissolve = false;
 bool g_flag_fresnel = false;
