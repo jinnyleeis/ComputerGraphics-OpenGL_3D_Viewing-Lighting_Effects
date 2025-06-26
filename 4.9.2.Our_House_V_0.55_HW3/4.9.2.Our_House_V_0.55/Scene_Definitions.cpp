@@ -628,14 +628,12 @@ void Scene::draw_static_world()
 		Static_Object& obj = obj_ref.get();
 		if (!obj.flag_valid) continue;
 
-		const bool isWT = (obj.object_id == STATIC_OBJECT_WOOD_TOWER);
 
+		const bool isWT = (obj.object_id == STATIC_OBJECT_WOOD_TOWER);
 		if (isWT) {
-			/* ─── 우드타워 한정 설정 ───────────────────── */
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);   // 항상 Fill
-			glDisable(GL_CULL_FACE);                     // 양면
-			glDisable(GL_DEPTH_TEST);                    // 깊이 읽기 X
-			glDepthMask(GL_FALSE);                       // 깊이 쓰기 X
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glDisable(GL_CULL_FACE);             // 양면
+			/* 깊이 버퍼는 그대로 ON : 사라지는 현상 방지 */
 		}
 
 		obj.draw_object(ViewMatrix, ProjectionMatrix,
